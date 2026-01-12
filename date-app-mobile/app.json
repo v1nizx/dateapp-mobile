@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "date-app-mobile",
+    "name": "Date App",
     "slug": "date-app-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,6 +16,9 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.dateapp.mobile",
+      "versionCode": 1,
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
