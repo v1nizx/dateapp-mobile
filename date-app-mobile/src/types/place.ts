@@ -18,6 +18,9 @@ export interface Place {
     aiRecommended: boolean;
     temEstacionamento: boolean;
     acessivel: boolean;
+    cuisineType?: string | null;
+    distanceKm?: number | null;
+    priceRange?: string | null;
 }
 
 export interface PlaceFilters {

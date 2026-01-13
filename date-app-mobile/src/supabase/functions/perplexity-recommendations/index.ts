@@ -15,29 +15,29 @@ interface RecommendationRequest {
 }
 
 const BUDGET_DESC: Record<string, string> = {
-  '$': 'econômico e acessível (até R$50 por pessoa)',
-  '$$': 'preço moderado (R$50-150 por pessoa)',
-  '$$$': 'sofisticado e premium (acima de R$150 por pessoa)'
+  '$': 'BARATO/POPULAR - gasto máximo R$30-50 por pessoa. Tipos de lugares: churrasquinhos de rua, tapiocarias, lanchonetes de bairro, hamburguerias simples, pizzarias populares, food trucks, espetinhos, açaiterias, creperias simples, pastelarias, cachorro-quente. NÃO são restaurantes sofisticados.',
+  '$$': 'MODERADO - gasto entre R$50-150 por pessoa. Tipos de lugares: restaurantes casuais com ambiente agradável, pizzarias gourmet, sushi casual, bistrôs, hamburguerias gourmet, bares com boa comida, restaurantes de bairro bem avaliados.',
+  '$$$': 'PREMIUM/CARO - gasto acima de R$150 por pessoa. APENAS: restaurantes fine dining, alta gastronomia, frutos do mar premium, steakhouses de luxo, restaurantes com chef renomado, experiências gastronômicas exclusivas.'
 }
 
 const TYPE_DESC: Record<string, string> = {
-  'gastronomia': 'gastronomia, incluindo restaurantes, cafés, bares, pizzarias, sushi, hamburguerias',
-  'cultura': 'cultura e entretenimento, como museus, teatros, cinemas, galerias de arte, exposições',
-  'ao-ar-livre': 'atividades ao ar livre, como parques, praias, trilhas, jardins, mirantes',
-  'aventura': 'aventura e atividades radicais, como escalada, tirolesa, paintball, kart, parques de diversão',
-  'casual': 'lugares casuais e descontraídos, como cafés, bares tranquilos, lounges, sorveterias'
+  'gastronomia': 'gastronomia variada - INCLUA DIFERENTES TIPOS: japonesa (sushi, temaki), italiana (massas, pizzas), brasileira/regional (nordestina, frutos do mar), hamburguerias, churrasquinhos, tapiocarias. VARIE os tipos de culinária nas recomendações.',
+  'cultura': 'cultura e entretenimento: museus, teatros, cinemas, galerias de arte, exposições, centros culturais, casas de shows',
+  'ao-ar-livre': 'atividades ao ar livre: parques, praias, trilhas, orla, praças, mirantes, jardins',
+  'aventura': 'aventura e atividades: escalada, tirolesa, paintball, kart, parques de diversão, passeios de barco',
+  'casual': 'lugares casuais: cafeterias, bares tranquilos, sorveterias, docerias, casas de açaí'
 }
 
 const AMBIENTE_DESC: Record<string, string> = {
-  'intimo': 'íntimo e reservado, com mesas afastadas, iluminação baixa, ambiente romântico e privativo',
-  'animado': 'animado e movimentado, com música, outras pessoas, ambiente descontraído e festivo',
-  'tranquilo': 'tranquilo e relaxante, sem música alta, ambiente calmo e aconchegante'
+  'intimo': 'íntimo e reservado - mesas afastadas, iluminação baixa, ambiente romântico e privativo',
+  'animado': 'animado e movimentado - música, pessoas, ambiente descontraído e festivo',
+  'tranquilo': 'tranquilo e relaxante - sem música alta, ambiente calmo para conversar'
 }
 
 const DISTANCIA_DESC: Record<string, string> = {
-  'perto': 'muito próximo, no máximo 5km de distância',
-  'medio': 'distância moderada, entre 5km e 15km',
-  'longe': 'mais distante, acima de 15km, ideal para explorar novos lugares'
+  'perto': 'MUITO PERTO - MÁXIMO 3km de distância. Deve ser possível ir a pé ou em menos de 10 minutos de carro. REJEITE qualquer lugar acima de 3km.',
+  'medio': 'DISTÂNCIA MÉDIA - entre 3km e 10km. NÃO inclua lugares muito perto (menos de 3km) NEM muito longe (mais de 10km).',
+  'longe': 'MAIS LONGE - acima de 10km, para explorar bairros diferentes e novos lugares da cidade.'
 }
 
 async function getPerplexityRecommendations(filters: RecommendationRequest): Promise<any[]> {
@@ -55,46 +55,78 @@ async function getPerplexityRecommendations(filters: RecommendationRequest): Pro
   const estacionamentoReq = filters.temEstacionamento ? 'DEVE ter estacionamento próprio ou fácil acesso a estacionamento' : ''
   const acessivelReq = filters.acessivel ? 'DEVE ser acessível para cadeirantes (rampas, banheiros adaptados, etc)' : ''
 
-  const prompt = `Você é um especialista em recomendações românticas para casais em São Luís, Maranhão, Brasil.
+  const prompt = `Você é um especialista em recomendações para casais em São Luís, Maranhão, Brasil.
 
-🎯 MISSÃO: Encontre os 5 MELHORES lugares REAIS em São Luís/MA para um casal com as seguintes preferências:
+🚨🚨🚨 REGRAS CRÍTICAS - LEIA COM ATENÇÃO 🚨🚨🚨
 
-📍 LOCALIZAÇÃO:
-- Latitude: ${filters.latitude}
-- Longitude: ${filters.longitude}
-- Cidade: São Luís, Maranhão, Brasil
+❌ RESTRIÇÃO DE DISTÂNCIA (OBRIGATÓRIA):
+${filters.distancia === 'perto' ? `- O usuário quer lugares MUITO PERTO, a NO MÁXIMO 3 QUILÔMETROS de distância.
+- Localização do usuário: Latitude ${filters.latitude}, Longitude ${filters.longitude}
+- CALCULE a distância de cada lugar antes de incluir.
+- Se a distância for maior que 3km, NÃO INCLUA O LUGAR.
+- Lugares a 5km, 8km, 10km = REJEITADOS. Apenas lugares até 3km.
+- Priorize o MESMO BAIRRO ou bairros IMEDIATAMENTE vizinhos.` : ''}
+${filters.distancia === 'medio' ? `- O usuário quer lugares a DISTÂNCIA MÉDIA, entre 3km e 10km.
+- Localização: Lat ${filters.latitude}, Lon ${filters.longitude}
+- NÃO inclua lugares muito perto (menos de 3km) nem muito longe (mais de 10km).` : ''}
+${filters.distancia === 'longe' ? `- O usuário quer EXPLORAR lugares mais distantes, acima de 10km.
+- Localização: Lat ${filters.latitude}, Lon ${filters.longitude}` : ''}
+${!filters.distancia ? `- Localização do usuário: Lat ${filters.latitude}, Lon ${filters.longitude}
+- Priorize lugares relativamente próximos.` : ''}
 
+❌ RESTRIÇÃO DE ORÇAMENTO (OBRIGATÓRIA):
+${filters.budget === '$' ? `- O usuário quer opções BARATAS/POPULARES (máximo R$30-50 por pessoa).
+- TIPOS DE LUGARES ESPERADOS: churrasquinhos, tapiocarias, lanchonetes de bairro, espetinhos, food trucks, açaiterias, pastelarias, hamburguerias simples.
+- NÃO são restaurantes sofisticados, bistrôs ou lugares caros.
+- Se o lugar tem preço médio acima de R$50, NÃO INCLUA.` : ''}
+${filters.budget === '$$' ? `- O usuário quer opções de PREÇO MODERADO (R$50-150 por pessoa).
+- TIPOS DE LUGARES: restaurantes casuais, pizzarias, sushi casual, hamburguerias gourmet, bares com boa comida.
+- NÃO inclua churrasquinhos de rua (muito barato) nem fine dining (muito caro).` : ''}
+${filters.budget === '$$$' ? `- O usuário quer opções PREMIUM/CARAS (acima de R$150 por pessoa).
+- APENAS: restaurantes fine dining, alta gastronomia, experiências exclusivas.
+- NÃO inclua lugares simples ou populares.` : ''}
+
+🎯 MISSÃO: Encontre 5 lugares REAIS em São Luís/MA que RESPEITEM AS RESTRIÇÕES ACIMA.
+
+📍 Cidade: São Luís, Maranhão, Brasil
 💰 ORÇAMENTO: ${budgetDesc}
-🎭 TIPO DE EXPERIÊNCIA: ${typeDesc}
+🎭 TIPO: ${typeDesc}
+${filters.type === 'gastronomia' && filters.budget === '$' ? `
+🍽️ PARA OPÇÃO BARATA - INCLUA:
+- Churrasquinhos famosos de São Luís
+- Tapiocarias bem avaliadas
+- Lanchonetes populares com boa comida
+- Espetinhos e churrasquinhos de rua
+- Food trucks conhecidos
+- Lugares simples mas gostosos para casais
+` : ''}
+${filters.type === 'gastronomia' && filters.budget !== '$' ? `
+🍽️ DIVERSIDADE GASTRONÔMICA:
+- Varie os tipos de culinária (japonesa, italiana, regional, frutos do mar, etc)
+` : ''}
 ⏰ PERÍODO: ${periodDesc}
 ${ambienteDesc ? `🎵 AMBIENTE: ${ambienteDesc}` : ''}
-${distanciaDesc ? `📏 DISTÂNCIA: ${distanciaDesc}` : ''}
 ${estacionamentoReq ? `🅿️ ${estacionamentoReq}` : ''}
 ${acessivelReq ? `♿ ${acessivelReq}` : ''}
 
-🔍 INSTRUÇÕES:
-1. Pesquise na web lugares REAIS e ATUAIS em São Luís/MA
-2. Priorize estabelecimentos com boa reputação e avaliações positivas
-3. Ambiente adequado para casais (romântico)
-4. Preços compatíveis com o orçamento
-5. Horário de funcionamento adequado (${periodDesc})
-${filters.ambiente ? `6. O ambiente deve ser ${ambienteDesc}` : ''}
-${filters.distancia ? `7. Respeite a preferência de distância: ${distanciaDesc}` : ''}
+🔍 ANTES DE INCLUIR CADA LUGAR, VERIFIQUE:
+1. A distância está dentro do limite? (${filters.distancia === 'perto' ? 'máximo 3km' : filters.distancia === 'medio' ? '3-10km' : 'qualquer'})
+2. O preço está correto? (${filters.budget === '$' ? 'barato, até R$50' : filters.budget === '$$' ? 'moderado, R$50-150' : 'caro, acima de R$150'})
+3. É um lugar REAL que existe em São Luís?
+4. Funciona no período ${periodDesc}?
+${filters.ambiente ? `7. O ambiente DEVE ser ${ambienteDesc}` : ''}
 
-📝 PARA CADA LUGAR (MUITO IMPORTANTE - SIGA EXATAMENTE):
-- Nome EXATO e COMPLETO do estabelecimento (como está no Google Maps)
-- Endereço COMPLETO e PRECISO no formato: "Rua/Avenida Nome, Número - Bairro, São Luís - MA, CEP"
-  * OBRIGATÓRIO: Nome da rua/avenida
-  * OBRIGATÓRIO: Número do estabelecimento
-  * OBRIGATÓRIO: Nome do bairro
-  * Exemplo: "Av. Litorânea, 1000 - Calhau, São Luís - MA, 65071-360"
-- Descrição de por que é perfeito (2-3 frases) - NÃO inclua referências numéricas entre colchetes
-- Avaliação (nota de 0 a 5, se disponível)
+📝 PARA CADA LUGAR:
+- Nome EXATO e COMPLETO do estabelecimento
+- Endereço COMPLETO: "Rua/Av. Nome, Número - Bairro, São Luís - MA, CEP"
+- priceRange: faixa de preço real do estabelecimento ("$", "$$" ou "$$$")
+- distanceKm: distância aproximada em km da localização do usuário
+- cuisineType: tipo de culinária (ex: "Japonesa", "Italiana", "Frutos do Mar", "Brasileira")
+- Descrição romântica (2-3 frases)
+- Avaliação (0-5)
 - Horário de funcionamento
 - Sugestão de atividade romântica
 - Dica especial
-- Se tem estacionamento (true/false)
-- Se é acessível para cadeirantes (true/false)
 
 🎨 RETORNE JSON NESTE FORMATO EXATO:
 {
@@ -103,6 +135,9 @@ ${filters.distancia ? `7. Respeite a preferência de distância: ${distanciaDesc
       "name": "Nome Exato do Estabelecimento",
       "address": "Rua/Av. Nome Completo, Número - Bairro, São Luís - MA",
       "neighborhood": "Nome do Bairro",
+      "priceRange": "$$",
+      "distanceKm": 3.5,
+      "cuisineType": "Japonesa",
       "description": "Por que é perfeito para um encontro romântico",
       "rating": 4.5,
       "openingHours": "Seg-Sex: 18h-23h, Sáb-Dom: 12h-23h",
@@ -114,18 +149,21 @@ ${filters.distancia ? `7. Respeite a preferência de distância: ${distanciaDesc
   ]
 }
 
-⚠️ REGRAS CRÍTICAS DE ENDEREÇO:
-1. NÃO use endereços genéricos como "Centro" ou "Região Central" - seja ESPECÍFICO
-2. SEMPRE inclua o número do estabelecimento
-3. SEMPRE inclua o nome do bairro (ex: Calhau, Renascença, Centro Histórico, Ponta d'Areia)
-4. Se não souber o endereço exato, NÃO inclua o lugar na lista
-5. Verifique se o endereço está correto pesquisando no Google Maps
+⚠️ VALIDAÇÃO FINAL - CADA LUGAR DEVE PASSAR NESTES TESTES:
+${filters.distancia === 'perto' ? `✅ distanceKm <= 3.0? Se distanceKm > 3.0, REJEITE o lugar.` : ''}
+${filters.distancia === 'medio' ? `✅ 3.0 <= distanceKm <= 10.0? Se não, REJEITE.` : ''}
+${filters.distancia === 'longe' ? `✅ distanceKm > 10.0? Se não, REJEITE.` : ''}
+✅ priceRange === "${filters.budget}"? Se não, REJEITE.
+✅ Funciona ${filters.period === 'dia' ? 'durante o dia' : 'à noite'}?
+${filters.type === 'gastronomia' && filters.budget === '$' ? '✅ É um lugar POPULAR/BARATO (churrasquinho, tapiocaria, lanchonete)?' : ''}
+
+🚫 LUGARES REJEITADOS = NÃO INCLUA NA LISTA. BUSQUE OUTRO QUE PASSE NA VALIDAÇÃO.
 
 IMPORTANTE: 
-- BUSQUE informações REAIS na web. NÃO invente endereços.
+- BUSQUE informações REAIS na web. NÃO invente.
 - Retorne APENAS JSON válido.
 - NÃO inclua referências numéricas entre colchetes.
-- Endereços imprecisos fazem o usuário ir para o lugar ERRADO - seja PRECISO!`
+- Se não encontrar 5 lugares que passem na validação, retorne menos lugares.`
 
   try {
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
@@ -193,7 +231,9 @@ IMPORTANTE:
         budget: filters.budget,
         type: filters.type,
         period: filters.period,
-        tags: ['romântico', 'perplexity-recomendado'],
+        tags: rec.cuisineType
+          ? ['romântico', 'perplexity-recomendado', rec.cuisineType.toLowerCase()]
+          : ['romântico', 'perplexity-recomendado'],
         imageUrl: '',
         rating: rec.rating || 0,
         suggestedActivity: cleanActivity.trim(),
@@ -201,7 +241,10 @@ IMPORTANTE:
         specialTip: cleanTip.trim(),
         aiRecommended: true,
         temEstacionamento: rec.temEstacionamento || false,
-        acessivel: rec.acessivel || false
+        acessivel: rec.acessivel || false,
+        cuisineType: rec.cuisineType || null,
+        distanceKm: rec.distanceKm || null,
+        priceRange: rec.priceRange || filters.budget
       }
     })
 
