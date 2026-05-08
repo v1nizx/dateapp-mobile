@@ -13,7 +13,10 @@ export const ENV = {
     FIREBASE_APP_ID: '1:453562375256:web:2d493f3ba5575809b53e2d',
     FIREBASE_MEASUREMENT_ID: 'G-CSBFMSWM7J',
 
-    // Chave Groq AI (gratuita)
-    // Obtenha em: https://console.groq.com/keys
+    // Geoapify Places API (gratuita — https://myprojects.geoapify.com)
+    GEOAPIFY_KEY: '4b0182c4cc5d40c3bc632576633703b6',
+
+    // Groq AI (gratuita — https://console.groq.com/keys)
     GROQ_API_KEY: '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',
 };
+

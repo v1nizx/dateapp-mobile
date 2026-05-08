@@ -33,13 +33,13 @@ type VibeType = 'intimate' | 'lively' | 'calm' | null;
 type DistanceType = 'nearby' | 'medium' | 'explore' | null;
 
 // Mapeamento de valores para API
-const BUDGET_MAP: Record<string, string> = {
+const BUDGET_MAP: Record<NonNullable<BudgetType>, '$' | '$$' | '$$$'> = {
     'economic': '$',
     'moderate': '$$',
     'premium': '$$$',
 };
 
-const TYPE_MAP: Record<string, string> = {
+const TYPE_MAP: Record<NonNullable<ExperienceType>, 'gastronomia' | 'cultura' | 'ao-ar-livre' | 'aventura' | 'casual'> = {
     'gastronomy': 'gastronomia',
     'culture': 'cultura',
     'nature': 'ao-ar-livre',
@@ -47,13 +47,13 @@ const TYPE_MAP: Record<string, string> = {
     'casual': 'casual',
 };
 
-const VIBE_MAP: Record<string, string> = {
+const VIBE_MAP: Record<NonNullable<VibeType>, 'intimo' | 'animado' | 'tranquilo'> = {
     'intimate': 'intimo',
     'lively': 'animado',
     'calm': 'tranquilo',
 };
 
-const DISTANCE_MAP: Record<string, string> = {
+const DISTANCE_MAP: Record<NonNullable<DistanceType>, 'perto' | 'medio' | 'longe'> = {
     'nearby': 'perto',
     'medium': 'medio',
     'explore': 'longe',
@@ -61,27 +61,36 @@ const DISTANCE_MAP: Record<string, string> = {
 
 // Função para abrir o mapa
 const openMap = async (place: Place) => {
-    // Tenta abrir o Google Maps ou app de mapa nativo
+    const name = encodeURIComponent(place.name ?? '');
     const query = encodeURIComponent(`${place.name} ${place.address} São Luís MA`);
-
-    // URLs para diferentes plataformas
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
-    const appleMapsUrl = `maps://maps.apple.com/?q=${query}`;
+    const hasCoords = place.latitude != null && place.longitude != null;
 
     try {
         if (Platform.OS === 'ios') {
-            // Tenta Apple Maps primeiro, depois Google Maps
-            const canOpenApple = await Linking.canOpenURL(appleMapsUrl);
-            if (canOpenApple) {
-                await Linking.openURL(appleMapsUrl);
-            } else {
-                await Linking.openURL(googleMapsUrl);
-            }
+            // Com coordenadas: ll= fixa o pin, q= define o nome exibido — sem sobrescrita
+            // Sem coordenadas: busca por texto como fallback
+            const url = hasCoords
+                ? `maps://?ll=${place.latitude},${place.longitude}&q=${name}`
+                : `maps://?q=${query}`;
+
+            const canOpen = await Linking.canOpenURL(url);
+            await Linking.openURL(canOpen ? url : `https://maps.apple.com/?ll=${place.latitude},${place.longitude}&q=${name}`);
+
         } else {
-            // Android - abre Google Maps
-            await Linking.openURL(googleMapsUrl);
+            // Android: geo: abre o Google Maps instalado com pin nomeado
+            // Fallback web se o app não estiver instalado
+            const geoUrl = hasCoords
+                ? `geo:${place.latitude},${place.longitude}?q=${place.latitude},${place.longitude}(${name})`
+                : `https://www.google.com/maps/search/?api=1&query=${query}`;
+
+            const canOpen = await Linking.canOpenURL(geoUrl);
+            await Linking.openURL(
+                canOpen
+                    ? geoUrl
+                    : `https://www.google.com/maps/search/?api=1&query=${query}`
+            );
         }
-    } catch (error) {
+    } catch {
         Alert.alert('Erro', 'Não foi possível abrir o mapa');
     }
 };
@@ -219,6 +228,11 @@ export const HomeScreen: React.FC = () => {
         // Buscar recomendações
         await searchPlaces(filters);
     };
+
+    if (places.length < 5) {
+  // opcional: mostrar aviso discreto
+        console.log('Alguns lugares sugeridos não foram encontrados e foram removidos.');
+    }
 
     const canSearch = selectedBudget && selectedExperience && selectedTime;
 
@@ -436,7 +450,7 @@ export const HomeScreen: React.FC = () => {
                             {loading ? (
                                 <View style={styles.loadingContainer}>
                                     <ActivityIndicator color={colors.primary} size="small" />
-                                    <Text style={styles.loadingText}>Buscando lugares mágicos... ✨</Text>
+                                    <Text style={styles.loadingText}>Buscando e validando lugares... ✨</Text>
                                 </View>
                             ) : (
                                 <Text style={[
