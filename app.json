@@ -20,6 +20,8 @@
       "versionCode": 1,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
@@ -36,6 +38,12 @@
       "eas": {
         "projectId": "bcf1a441-e6e9-4a60-8aa6-9c4e655269aa"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bcf1a441-e6e9-4a60-8aa6-9c4e655269aa"
     }
   }
 }
