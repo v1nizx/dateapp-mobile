@@ -1,5 +1,4 @@
 import * as Location from 'expo-location';
-import { ENV } from '../config/env';
 import { Place, PlaceFilters } from '../types/place';
 import { fetchRealPlaces, RealPlace } from './placesValidationService';
 
@@ -127,8 +126,8 @@ Retorne APENAS JSON válido:
 // ─── Chamada à API Groq ───────────────────────────────────────────────────────
 
 async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
-  const key = ENV.GROQ_API_KEY;
-  if (!key) throw new Error('GROQ_API_KEY não configurada');
+  const key = process.env['EXPO_PUBLIC_GROQ_API_KEY'];
+  if (!key) throw new Error('EXPO_PUBLIC_GROQ_API_KEY não definida no .env');
 
   // 1. Busca lugares reais primeiro
   console.log('📍 [Geoapify] Buscando lugares reais...');

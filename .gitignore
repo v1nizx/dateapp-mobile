@@ -17,10 +17,11 @@ ios/
 *.orig.*
 
 # ── Variáveis de ambiente ──────────────────────────────────────────────────────
+# Nunca comite arquivos .env com chaves reais!
 .env
 .env.local
 .env.*.local
-.env.ts
+# O .env.example é o único que pode ser commitado (não tem valores)
 
 # ── Logs ──────────────────────────────────────────────────────────────────────
 npm-debug.*

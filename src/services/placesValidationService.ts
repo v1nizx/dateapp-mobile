@@ -1,4 +1,3 @@
-import { ENV } from '../config/env';
 
 // ── Geoapify Places API v2 ────────────────────────────────────────────────────
 // Docs: https://apidocs.geoapify.com/docs/places/
@@ -108,7 +107,7 @@ async function fetchByCategories(
     bias:    `proximity:${lng},${lat}`,
     limit:   '20',
     lang:    'pt',
-    apiKey:  ENV.GEOAPIFY_KEY,
+    apiKey:  process.env['EXPO_PUBLIC_GEOAPIFY_KEY'] ?? '',
   });
 
   const url = `${BASE}?${params.toString()}`;
