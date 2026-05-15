@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, borderRadius, spacing, typography, shadows } from '../styles/theme';
+import { colors, radius, spacing, fontSize, shadows } from '../styles/theme';
 
 interface FeatureItemProps {
     emoji: string;
@@ -33,26 +33,29 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 56,
         height: 56,
-        borderRadius: borderRadius.md,
-        backgroundColor: '#FFF0F5',
+        borderRadius: radius.md,
+        backgroundColor: colors.tipBackground,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.medium,
         ...shadows.small,
     },
     emoji: {
         fontSize: 28,
     },
     title: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: '600',
-        color: colors.textPrimary,
+        fontSize: fontSize.sm,
+        fontWeight: '700',
+        color: colors.textDark,
         textAlign: 'center',
         marginBottom: 2,
     },
     description: {
-        fontSize: typography.fontSize.xs,
-        color: colors.textSecondary,
+        fontSize: fontSize.xs,
+        fontWeight: '400',
+        color: colors.textMuted,
         textAlign: 'center',
     },
 });

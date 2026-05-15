@@ -1,6 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { colors, borderRadius, spacing, typography } from '../styles/theme';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { colors, radius, spacing, fontSize } from '../styles/theme';
 
 interface FacilityChipProps {
     emoji: string;
@@ -19,7 +19,7 @@ export const FacilityChip: React.FC<FacilityChipProps> = ({
         <TouchableOpacity
             style={[styles.container, selected && styles.selected]}
             onPress={onPress}
-            activeOpacity={0.7}
+            activeOpacity={0.72}
         >
             <Text style={styles.emoji}>{emoji}</Text>
             <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
@@ -31,29 +31,31 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.cardBackground,
-        borderRadius: borderRadius.full,
+        backgroundColor: colors.card,
+        borderRadius: radius.full,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.lg,
         borderWidth: 1.5,
-        borderColor: '#E0E0E0',
+        borderColor: colors.chipBorderDefault,
         marginRight: spacing.sm,
         marginBottom: spacing.sm,
     },
     selected: {
         borderColor: colors.primary,
-        backgroundColor: '#FFF5F8',
+        backgroundColor: colors.chipSelected,
+        borderWidth: 2,
     },
     emoji: {
         fontSize: 16,
         marginRight: spacing.sm,
     },
     label: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: '500',
-        color: colors.textPrimary,
+        fontSize: fontSize.sm,
+        fontWeight: '600',
+        color: colors.textMuted,
     },
     labelSelected: {
         color: colors.primary,
+        fontWeight: '700',
     },
 });

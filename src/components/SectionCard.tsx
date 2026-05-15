@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, borderRadius, spacing, typography, shadows } from '../styles/theme';
+import { colors, radius, spacing, fontSize, shadows } from '../styles/theme';
 
 interface SectionCardProps {
     title?: string;
@@ -34,8 +34,8 @@ export const SectionCard: React.FC<SectionCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: colors.cardBackground,
-        borderRadius: borderRadius.xl,
+        backgroundColor: colors.card,
+        borderRadius: radius.xl,
         padding: spacing.xl,
         marginHorizontal: spacing.lg,
         marginBottom: spacing.lg,
@@ -46,14 +46,15 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
     title: {
-        fontSize: typography.fontSize.lg,
+        fontSize: fontSize.lg,
         fontWeight: '700',
         color: colors.primary,
         textAlign: 'center',
     },
     subtitle: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         marginTop: spacing.xs,
         textAlign: 'center',
     },

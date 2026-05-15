@@ -1,7 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, borderRadius, spacing, typography } from '../styles/theme';
+import { colors, radius, spacing, fontSize } from '../styles/theme';
 
 interface PrimaryButtonProps {
     title: string;
@@ -20,17 +20,22 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled}
-            activeOpacity={0.8}
+            activeOpacity={0.82}
             style={styles.touchable}
         >
             <LinearGradient
-                colors={disabled ? ['#ccc', '#aaa'] : ['#FF6B9D', '#FF8EB3']}
+                colors={
+                    disabled
+                        ? [colors.buttonDisabledStart, colors.buttonDisabledEnd]
+                        : [colors.buttonGradientStart, colors.buttonGradientEnd]
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.gradient}
             >
-                {emoji && <Text style={styles.emoji}>{emoji}</Text>}
-                <Text style={styles.text}>{title}</Text>
+                <Text style={styles.text}>
+                    {emoji ? `${emoji}  ` : ''}{title}
+                </Text>
             </LinearGradient>
         </TouchableOpacity>
     );
@@ -38,13 +43,13 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
 const styles = StyleSheet.create({
     touchable: {
-        borderRadius: borderRadius.full,
+        borderRadius: radius.full,
         overflow: 'hidden',
         shadowColor: colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.32,
+        shadowRadius: 10,
+        elevation: 6,
     },
     gradient: {
         flexDirection: 'row',
@@ -52,15 +57,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: spacing.lg,
         paddingHorizontal: spacing.xxl,
-        borderRadius: borderRadius.full,
-    },
-    emoji: {
-        fontSize: 18,
-        marginRight: spacing.sm,
+        borderRadius: radius.full,
     },
     text: {
-        color: '#FFFFFF',
-        fontSize: typography.fontSize.lg,
+        color: colors.textOnPrimary,
+        fontSize: fontSize.lg,
         fontWeight: '700',
+        letterSpacing: 0.3,
     },
 });

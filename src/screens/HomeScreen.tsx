@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChipButton, PrimaryButton, SectionCard, FeatureItem, FacilityChip } from '../components';
-import { colors, spacing, typography, borderRadius, shadows } from '../styles/theme';
+import { colors, spacing, radius, fontSize, fonts, shadows, borderRadius } from '../styles/theme';
 import { useRecommendations } from '../hooks';
 import { PlacesService } from '../services/placeService';
 import { Place } from '../types/place';
@@ -216,7 +216,7 @@ export const HomeScreen: React.FC = () => {
         const filters = {
             budget: BUDGET_MAP[selectedBudget],
             type: TYPE_MAP[selectedExperience],
-            period: selectedTime === 'day' ? 'dia' : 'noite',
+            period: (selectedTime === 'day' ? 'dia' : 'noite') as 'dia' | 'noite',
             ambiente: selectedVibe ? VIBE_MAP[selectedVibe] : undefined,
             distancia: selectedDistance ? DISTANCE_MAP[selectedDistance] : undefined,
             temEstacionamento: hasParking || undefined,
@@ -241,7 +241,7 @@ export const HomeScreen: React.FC = () => {
             <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
             <LinearGradient
-                colors={['#FFE4EC', '#FFF5F8', '#FFFFFF']}
+                colors={[colors.background, colors.backgroundEnd, colors.card]}
                 style={styles.gradient}
             >
                 <ScrollView
@@ -250,9 +250,14 @@ export const HomeScreen: React.FC = () => {
                 >
                     {/* Header */}
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>💕 Roteiro Surpresa ✨</Text>
+                        <Text style={styles.logoHeart}>💕</Text>
+                        <View style={styles.logoRow}>
+                            <Text style={styles.logoBold}>Date</Text>
+                            <Text style={styles.logoLight}>App</Text>
+                        </View>
+                        <Text style={styles.logoTagline}>EXPERIÊNCIAS ROMÂNTICAS</Text>
                         <Text style={styles.headerSubtitle}>
-                            ✨ Descubra experiências <Text style={styles.highlight}>únicas e inesquecíveis</Text> perto de você
+                            Descubra experiências <Text style={styles.highlight}>únicas e inesquecíveis</Text> perto de você
                         </Text>
                     </View>
 
@@ -560,10 +565,14 @@ export const HomeScreen: React.FC = () => {
 
                     {/* Footer */}
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>💕 Roteiro Surpresa 💕</Text>
+                        <Text style={styles.footerText}>💕 DateApp</Text>
                         <Text style={styles.footerSubtext}>
                             Criando memórias inesquecíveis para casais ✨
                         </Text>
+                        <View style={styles.footerDivider} />
+                        <Text style={styles.footerDev}>Desenvolvedor Principal</Text>
+                        <Text style={styles.footerDevName}>Marcos Vinicius Morais Rios</Text>
+                        <Text style={styles.footerCopy}>© {new Date().getFullYear()} DateApp · Todos os direitos reservados</Text>
                     </View>
                 </ScrollView>
             </LinearGradient>
@@ -582,34 +591,62 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: spacing.xxxl,
     },
+
+    // ── Header / Logo ──────────────────────────────────────────────────────────
     header: {
         alignItems: 'center',
-        paddingTop: spacing.xxxl + 20,
+        paddingTop: spacing.xxxl + 16,
         paddingBottom: spacing.xl,
         paddingHorizontal: spacing.lg,
     },
-    headerTitle: {
-        fontSize: typography.fontSize.title,
-        fontWeight: '800',
+    logoHeart: {
+        fontSize: 38,
+        marginBottom: spacing.xs,
+    },
+    logoRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        marginBottom: spacing.xs,
+    },
+    logoBold: {
+        fontSize: fontSize.hero,
+        fontWeight: '900',
         color: colors.primary,
+        letterSpacing: -0.5,
+    },
+    logoLight: {
+        fontSize: fontSize.hero,
+        fontWeight: '300',
+        color: colors.vibrant,
+        letterSpacing: -0.5,
+    },
+    logoTagline: {
+        fontSize: fontSize.xs,
+        fontWeight: '600',
+        color: colors.textMuted,
+        letterSpacing: 3,
         marginBottom: spacing.sm,
     },
     headerSubtitle: {
-        fontSize: typography.fontSize.md,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         textAlign: 'center',
+        lineHeight: 20,
     },
     highlight: {
         color: colors.primary,
         fontWeight: '600',
     },
+
+    // ── Seções e filtros ──────────────────────────────────────────────────────
     section: {
         marginBottom: spacing.xl,
     },
     sectionTitle: {
-        fontSize: typography.fontSize.md,
-        fontWeight: '600',
-        color: colors.textPrimary,
+        fontSize: fontSize.md,
+        fontWeight: '700',
+        color: colors.textDark,
         marginBottom: spacing.md,
     },
     chipRow: {
@@ -638,44 +675,47 @@ const styles = StyleSheet.create({
     },
     filterButtonText: {
         color: colors.primary,
-        fontSize: typography.fontSize.sm,
-        fontWeight: '500',
+        fontSize: fontSize.sm,
+        fontWeight: '600',
     },
     advancedFiltersContainer: {
-        backgroundColor: '#FEFAFC',
-        borderRadius: borderRadius.lg,
+        backgroundColor: colors.tipBackground,
+        borderRadius: radius.lg,
         padding: spacing.lg,
         marginBottom: spacing.md,
         borderWidth: 1,
-        borderColor: colors.primaryLight,
+        borderColor: colors.medium,
         borderStyle: 'dashed',
     },
     facilitiesRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
     },
+
+    // ── Botão principal ───────────────────────────────────────────────────────
     surpriseButton: {
-        backgroundColor: '#FFF0F5',
-        borderRadius: borderRadius.full,
+        backgroundColor: colors.tipBackground,
+        borderRadius: radius.full,
         paddingVertical: spacing.lg,
         alignItems: 'center',
         marginVertical: spacing.md,
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
+        borderWidth: 1.5,
+        borderColor: colors.medium,
     },
     surpriseButtonActive: {
         backgroundColor: colors.primary,
         borderColor: colors.primary,
     },
     surpriseButtonLoading: {
-        backgroundColor: '#FFE4EC',
+        backgroundColor: colors.background,
     },
     surpriseButtonText: {
-        color: colors.textSecondary,
-        fontSize: typography.fontSize.md,
+        color: colors.textMuted,
+        fontSize: fontSize.md,
+        fontWeight: '600',
     },
     surpriseButtonTextActive: {
-        color: '#FFFFFF',
+        color: colors.textOnPrimary,
         fontWeight: '700',
     },
     loadingContainer: {
@@ -685,22 +725,26 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         color: colors.primary,
-        fontSize: typography.fontSize.md,
+        fontSize: fontSize.md,
+        fontWeight: '600',
     },
     helperText: {
         textAlign: 'center',
-        color: colors.textSecondary,
-        fontSize: typography.fontSize.xs,
+        color: colors.textMuted,
+        fontSize: fontSize.xs,
+        fontWeight: '400',
         marginTop: spacing.sm,
     },
-    // Estilos para resultados
+
+    // ── Cards de lugares ──────────────────────────────────────────────────────
     placeCard: {
-        backgroundColor: '#FEFAFC',
-        borderRadius: borderRadius.lg,
+        backgroundColor: colors.card,
+        borderRadius: radius.lg,
         padding: spacing.lg,
         marginBottom: spacing.md,
         borderWidth: 1,
-        borderColor: colors.primaryLight,
+        borderColor: colors.medium,
+        ...shadows.small,
     },
     placeHeader: {
         flexDirection: 'row',
@@ -709,40 +753,44 @@ const styles = StyleSheet.create({
         marginBottom: spacing.sm,
     },
     placeName: {
-        fontSize: typography.fontSize.lg,
+        fontSize: fontSize.lg,
         fontWeight: '700',
-        color: colors.textPrimary,
+        color: colors.textDark,
         flex: 1,
     },
     placeRating: {
-        fontSize: typography.fontSize.sm,
+        fontSize: fontSize.sm,
+        fontWeight: '700',
         color: colors.primary,
-        fontWeight: '600',
     },
     placeDescription: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         marginBottom: spacing.sm,
-        lineHeight: 20,
+        lineHeight: 21,
     },
     placeAddress: {
-        fontSize: typography.fontSize.xs,
-        color: colors.textSecondary,
+        fontSize: fontSize.xs,
+        fontWeight: '400',
+        color: colors.textMuted,
         marginBottom: spacing.xs,
     },
     placeActivity: {
-        fontSize: typography.fontSize.sm,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
         color: colors.primary,
         marginTop: spacing.sm,
         fontStyle: 'italic',
     },
     placeTip: {
-        fontSize: typography.fontSize.xs,
-        color: colors.textSecondary,
+        fontSize: fontSize.xs,
+        fontWeight: '400',
+        color: colors.textMuted,
         marginTop: spacing.xs,
-        backgroundColor: '#FFF8DC',
+        backgroundColor: colors.tipBackground,
         padding: spacing.sm,
-        borderRadius: borderRadius.sm,
+        borderRadius: radius.sm,
     },
     placeTags: {
         flexDirection: 'row',
@@ -751,86 +799,93 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     placeTag: {
-        backgroundColor: '#E8F5E9',
+        backgroundColor: colors.tipBackground,
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
-        borderRadius: borderRadius.full,
+        borderRadius: radius.full,
+        borderWidth: 1,
+        borderColor: colors.medium,
     },
     placeTagText: {
-        fontSize: typography.fontSize.xs,
-        color: '#2E7D32',
+        fontSize: fontSize.xs,
+        fontWeight: '600',
+        color: colors.primary,
     },
     placeHours: {
-        fontSize: typography.fontSize.xs,
-        color: colors.textSecondary,
+        fontSize: fontSize.xs,
+        fontWeight: '400',
+        color: colors.textMuted,
         marginBottom: spacing.sm,
     },
     romanticTip: {
-        backgroundColor: '#FFF0F5',
+        backgroundColor: colors.tipBackground,
         padding: spacing.md,
-        borderRadius: borderRadius.md,
+        borderRadius: radius.md,
         marginTop: spacing.sm,
         borderLeftWidth: 3,
         borderLeftColor: colors.primary,
     },
     romanticTipTitle: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: '600',
+        fontSize: fontSize.sm,
+        fontWeight: '700',
         color: colors.primary,
         marginBottom: spacing.xs,
     },
     romanticTipText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         fontStyle: 'italic',
     },
     specialTipBox: {
-        backgroundColor: '#FFF8DC',
+        backgroundColor: '#FFF8E7',
         padding: spacing.md,
-        borderRadius: borderRadius.md,
+        borderRadius: radius.md,
         marginTop: spacing.sm,
         borderLeftWidth: 3,
         borderLeftColor: '#F5A623',
     },
     specialTipTitle: {
-        fontSize: typography.fontSize.sm,
-        fontWeight: '600',
-        color: '#F5A623',
+        fontSize: fontSize.sm,
+        fontWeight: '700',
+        color: '#D4870A',
         marginBottom: spacing.xs,
     },
     specialTipText: {
-        fontSize: typography.fontSize.xs,
-        color: colors.textSecondary,
+        fontSize: fontSize.xs,
+        fontWeight: '400',
+        color: colors.textMuted,
     },
     mapButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
-        borderWidth: 1,
+        backgroundColor: colors.card,
+        borderWidth: 1.5,
         borderColor: colors.primary,
-        borderRadius: borderRadius.full,
+        borderRadius: radius.full,
         paddingVertical: spacing.md,
         marginTop: spacing.md,
     },
     mapButtonText: {
         color: colors.primary,
-        fontSize: typography.fontSize.sm,
-        fontWeight: '600',
+        fontSize: fontSize.sm,
+        fontWeight: '700',
     },
     newSearchButton: {
         backgroundColor: colors.primary,
-        borderRadius: borderRadius.full,
+        borderRadius: radius.full,
         paddingVertical: spacing.md,
         alignItems: 'center',
         marginTop: spacing.md,
     },
     newSearchButtonText: {
-        color: '#FFFFFF',
-        fontSize: typography.fontSize.md,
-        fontWeight: '600',
+        color: colors.textOnPrimary,
+        fontSize: fontSize.md,
+        fontWeight: '700',
     },
-    // Estilos para erro
+
+    // ── Erro ─────────────────────────────────────────────────────────────────
     errorContainer: {
         alignItems: 'center',
         paddingVertical: spacing.lg,
@@ -840,29 +895,31 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     errorTitle: {
-        fontSize: typography.fontSize.lg,
+        fontSize: fontSize.lg,
         fontWeight: '700',
-        color: colors.textPrimary,
+        color: colors.textDark,
         marginBottom: spacing.sm,
     },
     errorText: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
     retryButton: {
         backgroundColor: colors.primary,
-        borderRadius: borderRadius.full,
+        borderRadius: radius.full,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.xl,
     },
     retryButtonText: {
-        color: '#FFFFFF',
-        fontSize: typography.fontSize.md,
-        fontWeight: '600',
+        color: colors.textOnPrimary,
+        fontSize: fontSize.md,
+        fontWeight: '700',
     },
-    // Estilos de localização
+
+    // ── Localização ───────────────────────────────────────────────────────────
     locationSection: {
         alignItems: 'center',
         paddingVertical: spacing.lg,
@@ -871,23 +928,26 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: '#E3F2FD',
+        backgroundColor: colors.tipBackground,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.medium,
     },
     locationEmoji: {
         fontSize: 32,
     },
     locationTitle: {
-        fontSize: typography.fontSize.lg,
+        fontSize: fontSize.lg,
         fontWeight: '700',
-        color: colors.textPrimary,
+        color: colors.textDark,
         marginBottom: spacing.xs,
     },
     locationSubtitle: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
@@ -895,20 +955,22 @@ const styles = StyleSheet.create({
         width: '100%',
         paddingHorizontal: spacing.lg,
     },
+
+    // ── Como funciona ─────────────────────────────────────────────────────────
     howItWorks: {
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.xl,
     },
     howItWorksTitle: {
-        fontSize: typography.fontSize.xl,
+        fontSize: fontSize.xl,
         fontWeight: '700',
-        color: colors.textPrimary,
+        color: colors.textDark,
         textAlign: 'center',
         marginBottom: spacing.xl,
     },
     featuresContainer: {
-        backgroundColor: colors.cardBackground,
-        borderRadius: borderRadius.xl,
+        backgroundColor: colors.card,
+        borderRadius: radius.xl,
         padding: spacing.xl,
         ...shadows.medium,
     },
@@ -916,22 +978,56 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
     },
+
+    // ── Footer ────────────────────────────────────────────────────────────────
     footer: {
         alignItems: 'center',
         paddingVertical: spacing.xxl,
-        backgroundColor: '#FFF0F5',
+        paddingHorizontal: spacing.xl,
+        backgroundColor: colors.tipBackground,
         marginTop: spacing.lg,
         marginHorizontal: spacing.lg,
-        borderRadius: borderRadius.xl,
+        marginBottom: spacing.lg,
+        borderRadius: radius.xl,
+        borderWidth: 1,
+        borderColor: colors.medium,
     },
     footerText: {
-        fontSize: typography.fontSize.lg,
-        fontWeight: '600',
+        fontSize: fontSize.lg,
+        fontWeight: '700',
         color: colors.primary,
     },
     footerSubtext: {
-        fontSize: typography.fontSize.sm,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: '400',
+        color: colors.textMuted,
         marginTop: spacing.xs,
+    },
+    footerDivider: {
+        width: '60%',
+        height: 1,
+        backgroundColor: colors.medium,
+        marginVertical: spacing.lg,
+        opacity: 0.6,
+    },
+    footerDev: {
+        fontSize: fontSize.xs,
+        fontWeight: '600',
+        color: colors.primary,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+    },
+    footerDevName: {
+        fontSize: fontSize.md,
+        fontWeight: '700',
+        color: colors.textDark,
+        marginTop: spacing.xs,
+    },
+    footerCopy: {
+        fontSize: fontSize.xs,
+        fontWeight: '400',
+        color: colors.textMuted,
+        marginTop: spacing.sm,
+        textAlign: 'center',
     },
 });

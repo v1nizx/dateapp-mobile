@@ -1,59 +1,49 @@
-// Tema do App - Roteiro Surpresa
+// ─────────────────────────────────────────────────────────────────────────────
+// DateApp — Design System
+// Fonte: sistema (Helvetica Neue / Roboto)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Paleta de Cores ──────────────────────────────────────────────────────────
 export const colors = {
-    // Cores principais
-    primary: '#FF6B9D',
-    primaryLight: '#FFB8D0',
-    primaryDark: '#E91E63',
-
-    // Background
-    background: '#FFF0F5',
-    backgroundGradientStart: '#FFE4EC',
-    backgroundGradientEnd: '#FFF5F8',
-
-    // Cards e superfícies
-    cardBackground: '#FFFFFF',
-    cardShadow: 'rgba(255, 107, 157, 0.15)',
-
-    // Textos
-    textPrimary: '#2D2D2D',
-    textSecondary: '#666666',
-    textAccent: '#FF6B9D',
-
-    // Estados
-    selected: '#FF6B9D',
-    unselected: '#F5F5F5',
-    selectedBorder: '#FF6B9D',
-
-    // Gradientes para botões
-    buttonGradient: ['#FF6B9D', '#FF8EB3'],
-
-    // Cores de destaque
-    success: '#4CAF50',
-    warning: '#FFC107',
-    info: '#2196F3',
-
-    // Badges
+    primary: '#E8437A',
+    vibrant: '#FF6B9D',
+    medium: '#FF9DBD',
+    background: '#FFE4EE',
+    backgroundEnd: '#FFF5F8',
+    card: '#FFFFFF',
+    textDark: '#2D1A22',
+    textMuted: '#9E6B7E',
+    textOnPrimary: '#FFFFFF',
+    chipDefault: '#FFFFFF',
+    chipSelected: '#FFE4EE',
+    chipBorderDefault: '#FF9DBD',
+    chipBorderSelected: '#E8437A',
+    buttonGradientStart: '#E8437A',
+    buttonGradientEnd: '#FF6B9D',
+    buttonDisabledStart: '#FFBDD1',
+    buttonDisabledEnd: '#FFD6E5',
+    tipBackground: '#FFF0F5',
+    tipBorder: '#E8437A',
     economic: '#FFE082',
-    moderate: '#90CAF9',
-    premium: '#CE93D8',
+    moderate: '#BBDEFB',
+    premium: '#E1BEE7',
+    tagBackground: '#FFF0F5',
+    tagText: '#E8437A',
 };
 
-export const typography = {
-    fontFamily: {
-        regular: 'System',
-        bold: 'System',
-    },
-    fontSize: {
-        xs: 10,
-        sm: 12,
-        md: 14,
-        lg: 16,
-        xl: 20,
-        xxl: 24,
-        title: 28,
-    },
+// ── Tamanhos de Fonte ─────────────────────────────────────────────────────────
+export const fontSize = {
+    xs: 11,
+    sm: 13,
+    md: 15,
+    lg: 17,
+    xl: 21,
+    xxl: 26,
+    title: 30,
+    hero: 36,
 };
 
+// ── Espaçamento ──────────────────────────────────────────────────────────────
 export const spacing = {
     xs: 4,
     sm: 8,
@@ -64,34 +54,51 @@ export const spacing = {
     xxxl: 32,
 };
 
-export const borderRadius = {
+// ── Bordas arredondadas ───────────────────────────────────────────────────────
+export const radius = {
     sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
+    md: 14,
+    lg: 18,
+    xl: 24,
     full: 9999,
 };
 
+// ── Sombras ──────────────────────────────────────────────────────────────────
 export const shadows = {
     small: {
-        shadowColor: '#FF6B9D',
+        shadowColor: '#E8437A',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
         shadowRadius: 4,
         elevation: 2,
     },
     medium: {
-        shadowColor: '#FF6B9D',
+        shadowColor: '#E8437A',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOpacity: 0.13,
+        shadowRadius: 10,
+        elevation: 5,
     },
     large: {
-        shadowColor: '#FF6B9D',
+        shadowColor: '#E8437A',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
-        elevation: 8,
+        shadowOpacity: 0.18,
+        shadowRadius: 18,
+        elevation: 9,
     },
+};
+
+// ── Compat: aliases para não quebrar imports antigos ─────────────────────────
+export const typography = {
+    fontFamily: { regular: undefined, bold: undefined },
+    fontSize,
+};
+export const borderRadius = radius;
+// Mantido para não quebrar imports; fontes são resolvidas pelo sistema
+export const fonts = {
+    light: undefined,
+    regular: undefined,
+    semiBold: undefined,
+    bold: undefined,
+    black: undefined,
 };
