@@ -107,7 +107,7 @@ async function fetchByCategories(
     bias:    `proximity:${lng},${lat}`,
     limit:   '20',
     lang:    'pt',
-    apiKey:  process.env['EXPO_PUBLIC_GEOAPIFY_KEY'] ?? '',
+    apiKey: process.env.EXPO_PUBLIC_GEOAPIFY_KEY ?? '',
   });
 
   const url = `${BASE}?${params.toString()}`;

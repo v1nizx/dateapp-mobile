@@ -126,7 +126,7 @@ Retorne APENAS JSON válido:
 // ─── Chamada à API Groq ───────────────────────────────────────────────────────
 
 async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
-  const key = process.env['EXPO_PUBLIC_GROQ_API_KEY'];
+  const key = process.env.EXPO_PUBLIC_GROQ_API_KEY;
   if (!key) throw new Error('EXPO_PUBLIC_GROQ_API_KEY não definida no .env');
 
   // 1. Busca lugares reais primeiro
