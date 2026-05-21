@@ -76,6 +76,12 @@ function buildPromptWithRealPlaces(
 ): string {
   const period = filters.period === 'dia' ? 'durante o dia' : 'à noite';
 
+  const budgetLabel: Record<string, string> = {
+    '$':   'Econômico — lugares simples, populares e acessíveis (até R$50/pessoa: lanchonetes, cafeterias, quiosques, fast food, comida de rua)',
+    '$$':  'Moderado — restaurantes casuais e bares (R$50 a R$150/pessoa: bistrôs, pizzarias, hamburguerias gourmet, pubs)',
+    '$$$': 'Premium — estabelecimentos sofisticados (acima de R$150/pessoa: fine dining, alta gastronomia, lounge bars exclusivos)',
+  };
+
   const placesList = realPlaces
     .map((p, i) =>
       `${i + 1}. ${p.name} | ${p.address} | lat: ${p.lat}, lng: ${p.lng} | rating: ${p.rating}`
@@ -90,10 +96,11 @@ Escolha os 5 melhores para um casal e escreva o conteúdo criativo de cada um.
 ## Lugares disponíveis (REAIS — não altere nome, endereço ou coordenadas):
 ${placesList}
 
-## Critérios de seleção:
+## Critérios de seleção (OBRIGATÓRIOS):
 - Período: ${period}
-- Orçamento: ${filters.budget}
-- Tipo: ${filters.type}
+- Orçamento: ${filters.budget} — ${budgetLabel[filters.budget] ?? ''}
+  ⚠️ SELECIONE APENAS lugares compatíveis com o perfil "${filters.budget}". Rejeite qualquer lugar que claramente fuja dessa faixa.
+- Tipo de experiência: ${filters.type}
 ${filters.ambiente ? `- Clima desejado: ${filters.ambiente}` : ''}
 
 ## Sua tarefa:
@@ -103,8 +110,9 @@ Para cada lugar escolhido, escreva:
 - specialTip: dica exclusiva sobre o lugar
 - openingHours: horário de funcionamento se souber, ou "Consultar horários"
 
-## REGRA CRÍTICA:
-NÃO altere name, address, latitude nem longitude — use EXATAMENTE os valores da lista acima.
+## REGRAS CRÍTICAS:
+1. NÃO altere name, address, latitude nem longitude — use EXATAMENTE os valores da lista acima.
+2. Os 5 lugares escolhidos DEVEM refletir o perfil de orçamento "${filters.budget}".
 
 Retorne APENAS JSON válido:
 {
@@ -130,7 +138,8 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
   if (!key) throw new Error('EXPO_PUBLIC_GROQ_API_KEY não definida no .env');
 
   // 1. Busca lugares reais primeiro
-  console.log('📍 [Geoapify] Buscando lugares reais...');
+  const budgetLabel = { '$': 'Econômico', '$$': 'Moderado', '$$$': 'Premium' }[filters.budget] ?? filters.budget;
+  console.log(`📍 [Geoapify] Buscando lugares — tipo: ${filters.type} | budget: ${budgetLabel} | distância: ${filters.distancia ?? 'medio'}...`);
   const realPlaces = await fetchRealPlaces(filters);
 
   if (realPlaces.length === 0) {

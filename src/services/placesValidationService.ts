@@ -8,13 +8,45 @@ const BASE = 'https://api.geoapify.com/v2/places';
 // ─── Mapeamento de categorias ─────────────────────────────────────────────────
 // Geoapify usa hierarquia com pontos: catering.restaurant, entertainment.museum…
 // Passamos múltiplas categorias separadas por vírgula em uma só requisição.
-const GEO_CATEGORIES: Record<string, string> = {
-  gastronomia:   'catering.restaurant,catering.cafe,catering.bar',
-  cultura:       'entertainment.museum,entertainment.gallery,tourism.attraction,tourism.sights',
-  'ao-ar-livre': 'leisure.park,natural.beach,leisure.garden,sport',
-  aventura:      'sport,entertainment.theme_park,tourism.attraction,leisure.water_park',
-  casual:        'catering.cafe,catering.bar,catering.ice_cream,catering.fast_food',
+//
+// Para cada tipo de experiência, definimos categorias distintas por faixa de preço
+// garantindo que a busca traga lugares coerentes com o orçamento selecionado.
+
+type BudgetTier = '$' | '$$' | '$$$';
+
+const GEO_CATEGORIES_BY_BUDGET: Record<string, Record<BudgetTier, string>> = {
+  gastronomia: {
+    '$':   'catering.fast_food,catering.food_court,catering.street_food,catering.cafe',
+    '$$':  'catering.restaurant,catering.cafe,catering.bar,catering.pub',
+    '$$$': 'catering.restaurant,catering.bar',
+  },
+  cultura: {
+    '$':   'entertainment.museum,tourism.sights,tourism.attraction',
+    '$$':  'entertainment.museum,entertainment.gallery,entertainment.cinema,tourism.attraction',
+    '$$$': 'entertainment.museum,entertainment.gallery,entertainment.theatre,tourism.attraction,tourism.sights',
+  },
+  'ao-ar-livre': {
+    '$':   'leisure.park,natural.beach,leisure.garden,leisure.playground',
+    '$$':  'leisure.park,natural.beach,leisure.garden,sport.pitch',
+    '$$$': 'natural.beach,leisure.park,sport.marina,sport',
+  },
+  aventura: {
+    '$':   'sport,leisure.playground,sport.pitch',
+    '$$':  'sport,entertainment.theme_park,tourism.attraction',
+    '$$$': 'sport,entertainment.theme_park,tourism.attraction,leisure.water_park',
+  },
+  casual: {
+    '$':   'catering.cafe,catering.ice_cream,catering.fast_food',
+    '$$':  'catering.cafe,catering.bar,catering.ice_cream,catering.pub',
+    '$$$': 'catering.cafe,catering.bar,catering.restaurant',
+  },
 };
+
+function getCategoriesByBudget(type: string, budget: BudgetTier): string {
+  const byType = GEO_CATEGORIES_BY_BUDGET[type];
+  if (!byType) return 'catering.restaurant';
+  return byType[budget] ?? byType['$$'];
+}
 
 // ─── Tipos exportados ─────────────────────────────────────────────────────────
 
@@ -50,7 +82,8 @@ export async function fetchRealPlaces(filters: {
   longitude: number;
   distancia?: string;
 }): Promise<RealPlace[]> {
-  const categories = GEO_CATEGORIES[filters.type] ?? 'catering.restaurant';
+  const budget = (filters.budget as BudgetTier) ?? '$$';
+  const categories = getCategoriesByBudget(filters.type, budget);
 
   const radiusMap: Record<string, number> = {
     perto:  3_000,
@@ -86,10 +119,20 @@ export async function fetchRealPlaces(filters: {
     return { place: p, score };
   });
 
-  return scored
+  // Ordena pelo score mas adiciona leve aleatoriedade nos top-15
+  // para garantir variedade entre buscas consecutivas com os mesmos filtros
+  const top15 = scored
     .sort((a, b) => b.score - a.score)
+    .slice(0, 15);
+
+  // Embaralha levemente: mantém os melhores no topo mas com variação
+  const shuffled = top15
+    .map(item => ({ item, rand: item.score + Math.random() * 0.15 }))
+    .sort((a, b) => b.rand - a.rand)
     .slice(0, 10)
-    .map(s => ({ ...s.place, rating: parseFloat(s.score.toFixed(3)) }));
+    .map(({ item }) => item);
+
+  return shuffled.map(s => ({ ...s.place, rating: parseFloat(s.score.toFixed(3)) }));
 }
 
 // ─── Requisição à API ─────────────────────────────────────────────────────────
