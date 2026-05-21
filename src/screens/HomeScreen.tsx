@@ -100,7 +100,7 @@ const PlaceCard: React.FC<{ place: Place }> = ({ place }) => (
     <View style={styles.placeCard}>
         <View style={styles.placeHeader}>
             <Text style={styles.placeName}>{place.name}</Text>
-            {place.rating > 0 && (
+        {place.rating >= 3 && (
                 <Text style={styles.placeRating}>⭐ {place.rating.toFixed(1)}</Text>
             )}
         </View>
@@ -480,13 +480,31 @@ export const HomeScreen: React.FC = () => {
                             <View style={styles.errorContainer}>
                                 <Text style={styles.errorEmoji}>😔</Text>
                                 <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
-                                <Text style={styles.errorText}>{error}</Text>
-                                <TouchableOpacity
-                                    style={styles.retryButton}
-                                    onPress={handleSurprise}
-                                >
-                                    <Text style={styles.retryButtonText}>Tentar novamente</Text>
-                                </TouchableOpacity>
+                                {error.split('\n').map((line, i) => (
+                                    <Text
+                                        key={i}
+                                        style={[
+                                            styles.errorText,
+                                            line.startsWith('•') && styles.errorBullet,
+                                        ]}
+                                    >
+                                        {line}
+                                    </Text>
+                                ))}
+                                <View style={styles.errorButtons}>
+                                    <TouchableOpacity
+                                        style={styles.retryButton}
+                                        onPress={handleSurprise}
+                                    >
+                                        <Text style={styles.retryButtonText}>🔄 Tentar novamente</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.clearButton}
+                                        onPress={clearPlaces}
+                                    >
+                                        <Text style={styles.clearButtonText}>✏️ Nova busca</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </SectionCard>
                     )}
@@ -915,6 +933,30 @@ const styles = StyleSheet.create({
     },
     retryButtonText: {
         color: colors.textOnPrimary,
+        fontSize: fontSize.md,
+        fontWeight: '700',
+    },
+    errorBullet: {
+        paddingLeft: spacing.sm,
+        color: colors.primary,
+        fontWeight: '500',
+    },
+    errorButtons: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginTop: spacing.md,
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+    },
+    clearButton: {
+        borderWidth: 1.5,
+        borderColor: colors.primary,
+        borderRadius: radius.full,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+    },
+    clearButtonText: {
+        color: colors.primary,
         fontSize: fontSize.md,
         fontWeight: '700',
     },

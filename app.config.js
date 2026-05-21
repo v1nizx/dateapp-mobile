@@ -1,0 +1,66 @@
+// app.config.js — configuração dinâmica para Expo SDK 54
+// expo-updates só é ativado em builds EAS (APK/produção)
+// No Expo Go (local), runtimeVersion é omitido para evitar erros de incompatibilidade.
+
+const IS_EAS_BUILD = !!process.env.EAS_BUILD;
+
+/** @type {import('@expo/config').ExpoConfig} */
+module.exports = {
+  expo: {
+    name: 'Date App',
+    slug: 'date-app-mobile',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/icon.png',
+    userInterfaceStyle: 'light',
+    splash: {
+      image: './assets/splash-icon.png',
+      resizeMode: 'contain',
+      backgroundColor: '#FFE4EE',
+    },
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: 'com.dateapp.mobile',
+    },
+    android: {
+      package: 'com.dateapp.mobile',
+      versionCode: 2,
+      permissions: [
+        'ACCESS_COARSE_LOCATION',
+        'ACCESS_FINE_LOCATION',
+      ],
+      adaptiveIcon: {
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#FFE4EE',
+      },
+    },
+    web: {
+      favicon: './assets/favicon.png',
+    },
+    // expo-updates: só ativo em builds EAS (APK), NUNCA no Expo Go local
+    ...(IS_EAS_BUILD && {
+      runtimeVersion: {
+        policy: 'appVersion',
+      },
+      updates: {
+        url: 'https://u.expo.dev/bcf1a441-e6e9-4a60-8aa6-9c4e655269aa',
+        fallbackToCacheTimeout: 0,
+      },
+    }),
+    extra: {
+      eas: {
+        projectId: 'bcf1a441-e6e9-4a60-8aa6-9c4e655269aa',
+      },
+    },
+    plugins: [
+      'expo-font',
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'O DateApp precisa da sua localização para encontrar lugares românticos próximos a você.',
+        },
+      ],
+    ],
+  },
+};

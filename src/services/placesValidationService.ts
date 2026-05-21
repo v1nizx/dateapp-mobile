@@ -16,24 +16,24 @@ type BudgetTier = '$' | '$$' | '$$$';
 
 const GEO_CATEGORIES_BY_BUDGET: Record<string, Record<BudgetTier, string>> = {
   gastronomia: {
-    '$':   'catering.fast_food,catering.food_court,catering.street_food,catering.cafe',
+    '$':   'catering.fast_food,catering.food_court,catering.cafe',
     '$$':  'catering.restaurant,catering.cafe,catering.bar,catering.pub',
     '$$$': 'catering.restaurant,catering.bar',
   },
   cultura: {
     '$':   'entertainment.museum,tourism.sights,tourism.attraction',
-    '$$':  'entertainment.museum,entertainment.gallery,entertainment.cinema,tourism.attraction',
-    '$$$': 'entertainment.museum,entertainment.gallery,entertainment.theatre,tourism.attraction,tourism.sights',
+    '$$':  'entertainment.museum,entertainment.culture.gallery,entertainment.cinema,tourism.attraction',
+    '$$$': 'entertainment.museum,entertainment.culture.gallery,entertainment.culture.theatre,tourism.attraction,tourism.sights',
   },
   'ao-ar-livre': {
-    '$':   'leisure.park,natural.beach,leisure.garden,leisure.playground',
-    '$$':  'leisure.park,natural.beach,leisure.garden,sport.pitch',
-    '$$$': 'natural.beach,leisure.park,sport.marina,sport',
+    '$':   'leisure.park,beach,leisure.park.garden,leisure.playground',
+    '$$':  'leisure.park,beach,leisure.park.garden,sport.pitch',
+    '$$$': 'beach,leisure.park,maritime.marina,sport',
   },
   aventura: {
     '$':   'sport,leisure.playground,sport.pitch',
     '$$':  'sport,entertainment.theme_park,tourism.attraction',
-    '$$$': 'sport,entertainment.theme_park,tourism.attraction,leisure.water_park',
+    '$$$': 'sport,entertainment.theme_park,tourism.attraction,entertainment.water_park',
   },
   casual: {
     '$':   'catering.cafe,catering.ice_cream,catering.fast_food',
@@ -92,12 +92,26 @@ export async function fetchRealPlaces(filters: {
   };
   const radius = radiusMap[filters.distancia ?? 'medio'];
 
-  const places = await fetchByCategories(
+  // ── Retry automático com raio 2× se não houver resultados ──────────────────
+  let places = await fetchByCategories(
     categories,
     filters.latitude,
     filters.longitude,
     radius,
   );
+
+  if (places.length === 0) {
+    const expandedRadius = Math.min(radius * 2, 40_000);
+    console.log(`⚠️ Sem resultados — expandindo raio para ${expandedRadius / 1000} km...`);
+    places = await fetchByCategories(
+      categories,
+      filters.latitude,
+      filters.longitude,
+      expandedRadius,
+    );
+  }
+
+  if (places.length === 0) return [];
 
   // ── Score de relevância contextual ────────────────────────────────────────
   const scored = places.map(p => {
@@ -132,7 +146,14 @@ export async function fetchRealPlaces(filters: {
     .slice(0, 10)
     .map(({ item }) => item);
 
-  return shuffled.map(s => ({ ...s.place, rating: parseFloat(s.score.toFixed(3)) }));
+  return shuffled.map(s => {
+    // Converte score interno (0–1) para escala de estrelas (1–5),
+    // arredondado para o 0.5 mais próximo. Score < 0.6 → sem exibição (0).
+    const stars = s.score >= 0.6
+      ? Math.round(s.score * 5 * 2) / 2   // ex: 0.7 → 3.5 | 0.9 → 4.5
+      : 0;
+    return { ...s.place, rating: Math.min(5, stars) };
+  });
 }
 
 // ─── Requisição à API ─────────────────────────────────────────────────────────

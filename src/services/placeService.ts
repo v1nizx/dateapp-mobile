@@ -143,7 +143,10 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
   const realPlaces = await fetchRealPlaces(filters);
 
   if (realPlaces.length === 0) {
-    throw new Error('Nenhum lugar encontrado na sua região. Tente ampliar a distância.');
+    throw new Error(
+      'Não encontramos lugares para esses filtros.\n\n' +
+      'Tente:\n• Ampliar a distância (Médio ou Explorar)\n• Mudar o tipo de experiência\n• Remover filtros avançados'
+    );
   }
   console.log(`✅ [Geoapify] ${realPlaces.length} lugares encontrados e ranqueados`);
 
