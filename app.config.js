@@ -9,6 +9,7 @@ module.exports = {
   expo: {
     name: 'Date App',
     slug: 'date-app-mobile',
+    scheme: 'dateapp',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
@@ -54,6 +55,7 @@ module.exports = {
     },
     plugins: [
       'expo-font',
+      'expo-web-browser',
       [
         'expo-location',
         {

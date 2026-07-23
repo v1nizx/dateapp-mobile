@@ -1,104 +1,116 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// DateApp — Design System
-// Fonte: sistema (Helvetica Neue / Roboto)
+// DateApp — Design System (Smart AI Date Finder)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Paleta de Cores ──────────────────────────────────────────────────────────
 export const colors = {
-    primary: '#E8437A',
-    vibrant: '#FF6B9D',
-    medium: '#FF9DBD',
-    background: '#FFE4EE',
-    backgroundEnd: '#FFF5F8',
-    card: '#FFFFFF',
-    textDark: '#2D1A22',
-    textMuted: '#9E6B7E',
-    textOnPrimary: '#FFFFFF',
-    chipDefault: '#FFFFFF',
-    chipSelected: '#FFE4EE',
-    chipBorderDefault: '#FF9DBD',
-    chipBorderSelected: '#E8437A',
-    buttonGradientStart: '#E8437A',
-    buttonGradientEnd: '#FF6B9D',
-    buttonDisabledStart: '#FFBDD1',
-    buttonDisabledEnd: '#FFD6E5',
-    tipBackground: '#FFF0F5',
-    tipBorder: '#E8437A',
-    economic: '#FFE082',
-    moderate: '#BBDEFB',
-    premium: '#E1BEE7',
-    tagBackground: '#FFF0F5',
-    tagText: '#E8437A',
+    primary: '#b90760',
+    onPrimary: '#ffffff',
+    primaryContainer: '#ff4d94',
+    onPrimaryContainer: '#5b002c',
+    secondary: '#6b5963',
+    secondaryContainer: '#f5dce8',
+    onSecondaryContainer: '#725f69',
+    tertiary: '#636037',
+    tertiaryContainer: '#b1ad7d',
+    background: '#fbf9f8',
+    onBackground: '#1b1c1c',
+    surface: '#fbf9f8',
+    onSurface: '#1b1c1c',
+    onSurfaceVariant: '#594047',
+    outline: '#8c7077',
+    outlineVariant: '#e0bec6',
+    error: '#ba1a1a',
+    
+    // Legacy maps for smooth migration
+    vibrant: '#ff4d94',
+    medium: '#ffb1c7',
+    backgroundEnd: '#fbf9f8',
+    card: '#ffffff',
+    textDark: '#1b1c1c',
+    textMuted: '#594047',
+    textOnPrimary: '#ffffff',
+    chipDefault: '#ffffff',
+    chipSelected: '#f5dce8',
+    chipBorderDefault: '#e0bec6',
+    chipBorderSelected: '#b90760',
+    buttonGradientStart: '#b90760',
+    buttonGradientEnd: '#ff4d94',
+    buttonDisabledStart: '#e4e2e2',
+    buttonDisabledEnd: '#e4e2e2',
+    tipBackground: '#f5f3f3',
+    tipBorder: '#8c7077',
+    economic: '#eae4b1',
+    moderate: '#f5dce8',
+    premium: '#ffd9e2',
+    tagBackground: '#f5f3f3',
+    tagText: '#b90760',
 };
 
-// ── Tamanhos de Fonte ─────────────────────────────────────────────────────────
 export const fontSize = {
-    xs: 11,
-    sm: 13,
-    md: 15,
-    lg: 17,
-    xl: 21,
-    xxl: 26,
-    title: 30,
-    hero: 36,
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 22,
+    xl: 28,
+    xxl: 32,
+    title: 28,
+    hero: 32,
 };
 
-// ── Espaçamento ──────────────────────────────────────────────────────────────
 export const spacing = {
-    xs: 4,
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
-    xxl: 24,
-    xxxl: 32,
+    xs: 8,
+    sm: 12,
+    md: 16, // card-padding
+    lg: 24, // container-padding
+    xl: 32, // stack-gap-lg
+    xxl: 40, // section-margin
+    xxxl: 48,
 };
 
-// ── Bordas arredondadas ───────────────────────────────────────────────────────
 export const radius = {
-    sm: 8,
-    md: 14,
-    lg: 18,
-    xl: 24,
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
     full: 9999,
 };
 
-// ── Sombras ──────────────────────────────────────────────────────────────────
 export const shadows = {
     small: {
-        shadowColor: '#E8437A',
+        shadowColor: '#b90760',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
     },
     medium: {
-        shadowColor: '#E8437A',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.13,
-        shadowRadius: 10,
-        elevation: 5,
+        shadowColor: '#b90760',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 4,
     },
     large: {
-        shadowColor: '#E8437A',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.18,
-        shadowRadius: 18,
-        elevation: 9,
+        shadowColor: '#b90760',
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.15,
+        shadowRadius: 50,
+        elevation: 8,
     },
 };
 
-// ── Compat: aliases para não quebrar imports antigos ─────────────────────────
 export const typography = {
-    fontFamily: { regular: undefined, bold: undefined },
+    fontFamily: {
+        regular: 'BeVietnamPro_400Regular',
+        medium: 'BeVietnamPro_500Medium',
+        semiBold: 'BeVietnamPro_600SemiBold',
+        bold: 'PlusJakartaSans_700Bold',
+        headlineBold: 'PlusJakartaSans_700Bold',
+        headlineExtraBold: 'PlusJakartaSans_800ExtraBold',
+    },
     fontSize,
 };
+
 export const borderRadius = radius;
-// Mantido para não quebrar imports; fontes são resolvidas pelo sistema
-export const fonts = {
-    light: undefined,
-    regular: undefined,
-    semiBold: undefined,
-    bold: undefined,
-    black: undefined,
-};
+
+export const fonts = typography.fontFamily;

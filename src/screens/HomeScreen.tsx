@@ -13,8 +13,11 @@ import {
     Alert,
     Linking,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChipButton, PrimaryButton, SectionCard, FeatureItem, FacilityChip } from '../components';
+import { BottomNavBar } from '../components/BottomNavBar';
 import { colors, spacing, radius, fontSize, fonts, shadows, borderRadius } from '../styles/theme';
 import { useRecommendations } from '../hooks';
 import { PlacesService } from '../services/placeService';
@@ -146,6 +149,7 @@ const PlaceCard: React.FC<{ place: Place }> = ({ place }) => (
 );
 
 export const HomeScreen: React.FC = () => {
+    const insets = useSafeAreaInsets();
     const [selectedBudget, setSelectedBudget] = useState<BudgetType>(null);
     const [selectedExperience, setSelectedExperience] = useState<ExperienceType>('gastronomy');
     const [selectedTime, setSelectedTime] = useState<TimeType>('day');
@@ -237,7 +241,7 @@ export const HomeScreen: React.FC = () => {
     const canSearch = selectedBudget && selectedExperience && selectedTime;
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
             <LinearGradient
@@ -594,7 +598,10 @@ export const HomeScreen: React.FC = () => {
                     </View>
                 </ScrollView>
             </LinearGradient>
-        </View>
+
+            {/* Barra de navegação inferior */}
+            <BottomNavBar />
+        </SafeAreaView>
     );
 };
 
@@ -607,13 +614,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: spacing.xxxl,
+        paddingBottom: 90, // espaço para a BottomNavBar
     },
 
     // ── Header / Logo ──────────────────────────────────────────────────────────
     header: {
         alignItems: 'center',
-        paddingTop: spacing.xxxl + 16,
+        paddingTop: spacing.md,
         paddingBottom: spacing.xl,
         paddingHorizontal: spacing.lg,
     },
@@ -628,33 +635,33 @@ const styles = StyleSheet.create({
     },
     logoBold: {
         fontSize: fontSize.hero,
-        fontWeight: '900',
+        fontFamily: fonts.headlineExtraBold,
         color: colors.primary,
         letterSpacing: -0.5,
     },
     logoLight: {
         fontSize: fontSize.hero,
-        fontWeight: '300',
+        fontFamily: fonts.regular,
         color: colors.vibrant,
         letterSpacing: -0.5,
     },
     logoTagline: {
         fontSize: fontSize.xs,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
         color: colors.textMuted,
         letterSpacing: 3,
         marginBottom: spacing.sm,
     },
     headerSubtitle: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         textAlign: 'center',
         lineHeight: 20,
     },
     highlight: {
         color: colors.primary,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
     },
 
     // ── Seções e filtros ──────────────────────────────────────────────────────
@@ -663,7 +670,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: fontSize.md,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.textDark,
         marginBottom: spacing.md,
     },
@@ -694,7 +701,7 @@ const styles = StyleSheet.create({
     filterButtonText: {
         color: colors.primary,
         fontSize: fontSize.sm,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
     },
     advancedFiltersContainer: {
         backgroundColor: colors.tipBackground,
@@ -730,11 +737,11 @@ const styles = StyleSheet.create({
     surpriseButtonText: {
         color: colors.textMuted,
         fontSize: fontSize.md,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
     },
     surpriseButtonTextActive: {
         color: colors.textOnPrimary,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
     },
     loadingContainer: {
         flexDirection: 'row',
@@ -744,13 +751,13 @@ const styles = StyleSheet.create({
     loadingText: {
         color: colors.primary,
         fontSize: fontSize.md,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
     },
     helperText: {
         textAlign: 'center',
         color: colors.textMuted,
         fontSize: fontSize.xs,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         marginTop: spacing.sm,
     },
 
@@ -772,38 +779,38 @@ const styles = StyleSheet.create({
     },
     placeName: {
         fontSize: fontSize.lg,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.textDark,
         flex: 1,
     },
     placeRating: {
         fontSize: fontSize.sm,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.primary,
     },
     placeDescription: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         marginBottom: spacing.sm,
         lineHeight: 21,
     },
     placeAddress: {
         fontSize: fontSize.xs,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         marginBottom: spacing.xs,
     },
     placeActivity: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.primary,
         marginTop: spacing.sm,
         fontStyle: 'italic',
     },
     placeTip: {
         fontSize: fontSize.xs,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         marginTop: spacing.xs,
         backgroundColor: colors.tipBackground,
@@ -826,12 +833,12 @@ const styles = StyleSheet.create({
     },
     placeTagText: {
         fontSize: fontSize.xs,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
         color: colors.primary,
     },
     placeHours: {
         fontSize: fontSize.xs,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         marginBottom: spacing.sm,
     },
@@ -845,13 +852,13 @@ const styles = StyleSheet.create({
     },
     romanticTipTitle: {
         fontSize: fontSize.sm,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.primary,
         marginBottom: spacing.xs,
     },
     romanticTipText: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         fontStyle: 'italic',
     },
@@ -865,13 +872,13 @@ const styles = StyleSheet.create({
     },
     specialTipTitle: {
         fontSize: fontSize.sm,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: '#D4870A',
         marginBottom: spacing.xs,
     },
     specialTipText: {
         fontSize: fontSize.xs,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
     },
     mapButton: {
@@ -888,7 +895,7 @@ const styles = StyleSheet.create({
     mapButtonText: {
         color: colors.primary,
         fontSize: fontSize.sm,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
     },
     newSearchButton: {
         backgroundColor: colors.primary,
@@ -900,7 +907,7 @@ const styles = StyleSheet.create({
     newSearchButtonText: {
         color: colors.textOnPrimary,
         fontSize: fontSize.md,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
     },
 
     // ── Erro ─────────────────────────────────────────────────────────────────
@@ -914,13 +921,13 @@ const styles = StyleSheet.create({
     },
     errorTitle: {
         fontSize: fontSize.lg,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.textDark,
         marginBottom: spacing.sm,
     },
     errorText: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         textAlign: 'center',
         marginBottom: spacing.lg,
@@ -934,12 +941,12 @@ const styles = StyleSheet.create({
     retryButtonText: {
         color: colors.textOnPrimary,
         fontSize: fontSize.md,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
     },
     errorBullet: {
         paddingLeft: spacing.sm,
         color: colors.primary,
-        fontWeight: '500',
+        fontFamily: fonts.medium,
     },
     errorButtons: {
         flexDirection: 'row',
@@ -958,7 +965,7 @@ const styles = StyleSheet.create({
     clearButtonText: {
         color: colors.primary,
         fontSize: fontSize.md,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
     },
 
     // ── Localização ───────────────────────────────────────────────────────────
@@ -982,13 +989,13 @@ const styles = StyleSheet.create({
     },
     locationTitle: {
         fontSize: fontSize.lg,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.textDark,
         marginBottom: spacing.xs,
     },
     locationSubtitle: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         textAlign: 'center',
         marginBottom: spacing.lg,
@@ -1005,7 +1012,7 @@ const styles = StyleSheet.create({
     },
     howItWorksTitle: {
         fontSize: fontSize.xl,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.textDark,
         textAlign: 'center',
         marginBottom: spacing.xl,
@@ -1036,12 +1043,12 @@ const styles = StyleSheet.create({
     },
     footerText: {
         fontSize: fontSize.lg,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.primary,
     },
     footerSubtext: {
         fontSize: fontSize.sm,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         marginTop: spacing.xs,
     },
@@ -1054,20 +1061,20 @@ const styles = StyleSheet.create({
     },
     footerDev: {
         fontSize: fontSize.xs,
-        fontWeight: '600',
+        fontFamily: fonts.semiBold,
         color: colors.primary,
         letterSpacing: 1,
         textTransform: 'uppercase',
     },
     footerDevName: {
         fontSize: fontSize.md,
-        fontWeight: '700',
+        fontFamily: fonts.headlineBold,
         color: colors.textDark,
         marginTop: spacing.xs,
     },
     footerCopy: {
         fontSize: fontSize.xs,
-        fontWeight: '400',
+        fontFamily: fonts.regular,
         color: colors.textMuted,
         marginTop: spacing.sm,
         textAlign: 'center',
