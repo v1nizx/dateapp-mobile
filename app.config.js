@@ -1,8 +1,4 @@
-// app.config.js — configuração dinâmica para Expo SDK 54
-// expo-updates só é ativado em builds EAS (APK/produção)
-// No Expo Go (local), runtimeVersion é omitido para evitar erros de incompatibilidade.
-
-const IS_EAS_BUILD = !!process.env.EAS_BUILD;
+// app.config.js — configuração para Expo SDK 54 & EAS Update
 
 /** @type {import('@expo/config').ExpoConfig} */
 module.exports = {
@@ -38,16 +34,12 @@ module.exports = {
     web: {
       favicon: './assets/favicon.png',
     },
-    // expo-updates: só ativo em builds EAS (APK), NUNCA no Expo Go local
-    ...(IS_EAS_BUILD && {
-      runtimeVersion: {
-        policy: 'appVersion',
-      },
-      updates: {
-        url: 'https://u.expo.dev/bcf1a441-e6e9-4a60-8aa6-9c4e655269aa',
-        fallbackToCacheTimeout: 0,
-      },
-    }),
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
+    updates: {
+      url: 'https://u.expo.dev/bcf1a441-e6e9-4a60-8aa6-9c4e655269aa',
+    },
     extra: {
       eas: {
         projectId: 'bcf1a441-e6e9-4a60-8aa6-9c4e655269aa',
