@@ -33,7 +33,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
                 end={{ x: 1, y: 0 }}
                 style={styles.gradient}
             >
-                <Text style={styles.text}>
+                <Text style={styles.text} numberOfLines={1} adjustsFontSizeToFit>
                     {emoji ? `${emoji}  ` : ''}{title}
                 </Text>
             </LinearGradient>
@@ -64,5 +64,6 @@ const styles = StyleSheet.create({
         fontSize: fontSize.lg,
         fontWeight: '700',
         letterSpacing: 0.3,
+        textAlign: 'center',
     },
 });

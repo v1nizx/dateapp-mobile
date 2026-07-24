@@ -9,15 +9,16 @@ import { colors, typography, spacing, radius } from '../styles/theme';
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 type NavItem = {
-    key: 'Home' | 'Planos';
+    key: 'Home' | 'Planos' | 'Perfil';
     icon: keyof typeof Ionicons.glyphMap;
     iconActive: keyof typeof Ionicons.glyphMap;
     label: string;
 };
 
 const NAV_ITEMS: NavItem[] = [
-    { key: 'Home',   icon: 'home-outline',   iconActive: 'home',          label: 'Home' },
-    { key: 'Planos', icon: 'sparkles-outline', iconActive: 'sparkles',     label: 'Planos' },
+    { key: 'Home',   icon: 'home-outline',     iconActive: 'home',       label: 'Home'   },
+    { key: 'Planos', icon: 'sparkles-outline',  iconActive: 'sparkles',   label: 'Planos' },
+    { key: 'Perfil', icon: 'person-outline',    iconActive: 'person',     label: 'Perfil' },
 ];
 
 export function BottomNavBar() {
@@ -27,23 +28,8 @@ export function BottomNavBar() {
 
     return (
         <View style={styles.container}>
-            {/* Perfil (placeholder sem navegação) */}
-            {[...NAV_ITEMS, null].map((item, index) => {
-                if (!item) {
-                    // Perfil placeholder
-                    return (
-                        <TouchableOpacity key="Perfil" style={styles.item} activeOpacity={0.7}>
-                            <View style={styles.iconWrapper}>
-                                <Ionicons name="person-outline" size={22} color={colors.onSurfaceVariant} />
-                            </View>
-                            <Text style={styles.label}>Perfil</Text>
-                        </TouchableOpacity>
-                    );
-                }
-
-                const { key, icon, iconActive, label } = item;
+            {NAV_ITEMS.map(({ key, icon, iconActive, label }) => {
                 const isActive = currentRoute === key;
-
                 return (
                     <TouchableOpacity
                         key={key}
@@ -94,7 +80,7 @@ const styles = StyleSheet.create({
         borderRadius: radius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 14, // pill sempre tem padding, só muda o fundo
+        paddingHorizontal: 14,
     },
     iconWrapperActive: {
         backgroundColor: colors.secondaryContainer,

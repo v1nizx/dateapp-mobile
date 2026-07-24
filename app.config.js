@@ -18,6 +18,7 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.dateapp.mobile',
+      // googleServicesFile: './GoogleService-Info.plist', // habilitar quando tiver iOS
     },
     android: {
       package: 'com.dateapp.mobile',
@@ -30,6 +31,8 @@ module.exports = {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#FFE4EE',
       },
+      // Necessário para Google Sign-In nativo no Android
+      googleServicesFile: './google-services.json',
     },
     web: {
       favicon: './assets/favicon.png',

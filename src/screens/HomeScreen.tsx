@@ -373,7 +373,7 @@ export const HomeScreen: React.FC = () => {
                         {showAdvancedFilters && (
                             <View style={styles.advancedFiltersContainer}>
                                 {/* Qual clima vocês preferem? */}
-                                <View style={styles.section}>
+                                <View style={styles.sectionCompact}>
                                     <Text style={styles.sectionTitle}>🎵 Qual clima vocês preferem?</Text>
                                     <View style={styles.chipRow}>
                                         <ChipButton
@@ -398,7 +398,7 @@ export const HomeScreen: React.FC = () => {
                                 </View>
 
                                 {/* Distância máxima */}
-                                <View style={styles.section}>
+                                <View style={styles.sectionCompact}>
                                     <Text style={styles.sectionTitle}>📍 Distância máxima</Text>
                                     <View style={styles.chipRow}>
                                         <ChipButton
@@ -426,7 +426,7 @@ export const HomeScreen: React.FC = () => {
                                 </View>
 
                                 {/* Facilidades */}
-                                <View style={styles.section}>
+                                <View style={[styles.sectionCompact, { marginBottom: 0 }]}>
                                     <Text style={styles.sectionTitle}>🎁 Facilidades</Text>
                                     <View style={styles.facilitiesRow}>
                                         <FacilityChip
@@ -668,6 +668,9 @@ const styles = StyleSheet.create({
     section: {
         marginBottom: spacing.xl,
     },
+    sectionCompact: {
+        marginBottom: spacing.md,
+    },
     sectionTitle: {
         fontSize: fontSize.md,
         fontFamily: fonts.headlineBold,
@@ -706,7 +709,8 @@ const styles = StyleSheet.create({
     advancedFiltersContainer: {
         backgroundColor: colors.tipBackground,
         borderRadius: radius.lg,
-        padding: spacing.lg,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
         marginBottom: spacing.md,
         borderWidth: 1,
         borderColor: colors.medium,
@@ -715,6 +719,7 @@ const styles = StyleSheet.create({
     facilitiesRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+        gap: spacing.sm,
     },
 
     // ── Botão principal ───────────────────────────────────────────────────────
@@ -992,6 +997,7 @@ const styles = StyleSheet.create({
         fontFamily: fonts.headlineBold,
         color: colors.textDark,
         marginBottom: spacing.xs,
+        textAlign: 'center',
     },
     locationSubtitle: {
         fontSize: fontSize.sm,

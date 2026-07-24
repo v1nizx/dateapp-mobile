@@ -4,7 +4,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation';
 import { colors } from './src/styles/theme';
-import * as Font from 'expo-font';
 import { 
     useFonts, 
     PlusJakartaSans_700Bold, 
@@ -16,6 +15,7 @@ import {
     BeVietnamPro_600SemiBold 
 } from '@expo-google-fonts/be-vietnam-pro';
 import * as SplashScreen from 'expo-splash-screen';
+import { AuthProvider } from './src/context/AuthContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,11 +39,13 @@ export default function App() {
     }
 
     return (
-        <SafeAreaProvider style={styles.container}>
-            <NavigationContainer>
-                <RootNavigator />
-            </NavigationContainer>
-        </SafeAreaProvider>
+        <AuthProvider>
+            <SafeAreaProvider style={styles.container}>
+                <NavigationContainer>
+                    <RootNavigator />
+                </NavigationContainer>
+            </SafeAreaProvider>
+        </AuthProvider>
     );
 }
 

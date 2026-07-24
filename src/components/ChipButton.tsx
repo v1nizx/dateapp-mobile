@@ -26,9 +26,8 @@ export const ChipButton: React.FC<ChipButtonProps> = ({
             <Text style={styles.emoji}>{emoji}</Text>
             <Text
                 style={[styles.label, selected && styles.labelSelected]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
+                numberOfLines={2}
+                textBreakStrategy="simple"
             >
                 {label}
             </Text>
@@ -36,8 +35,6 @@ export const ChipButton: React.FC<ChipButtonProps> = ({
                 <Text
                     style={[styles.sublabel, selected && styles.sublabelSelected]}
                     numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.7}
                 >
                     {sublabel}
                 </Text>
@@ -70,10 +67,11 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xs,
     },
     label: {
-        fontSize: fontSize.sm,
+        fontSize: 12,
         fontWeight: '600',
         color: colors.textMuted,
         textAlign: 'center',
+        lineHeight: 16,
     },
     labelSelected: {
         color: colors.primary,

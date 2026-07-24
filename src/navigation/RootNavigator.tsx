@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { WelcomeScreen, LoginScreen, PlanosScreen, RegisterScreen, HomeScreen } from '../screens';
+import { WelcomeScreen, LoginScreen, PlanosScreen, RegisterScreen, HomeScreen, PerfilScreen } from '../screens';
 
 export type RootStackParamList = {
     Welcome: undefined;
@@ -8,6 +8,7 @@ export type RootStackParamList = {
     Register: undefined;
     Home: undefined;
     Planos: undefined;
+    Perfil: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,6 +27,7 @@ export function RootNavigator() {
             <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Planos" component={PlanosScreen} />
+            <Stack.Screen name="Perfil" component={PerfilScreen} />
         </Stack.Navigator>
     );
 }
