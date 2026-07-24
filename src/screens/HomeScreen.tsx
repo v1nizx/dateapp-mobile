@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChipButton, PrimaryButton, SectionCard, FeatureItem, FacilityChip } from '../components';
 import { BottomNavBar } from '../components/BottomNavBar';
+import { AdBanner } from '../components/AdBanner';
 import { colors, spacing, radius, fontSize, fonts, shadows, borderRadius } from '../styles/theme';
 import { useRecommendations } from '../hooks';
 import { PlacesService } from '../services/placeService';
@@ -584,6 +585,9 @@ export const HomeScreen: React.FC = () => {
                             </View>
                         </View>
                     </View>
+
+                    {/* Banner de anúncio — visível apenas para usuários gratuitos */}
+                    <AdBanner marginVertical={spacing.md} />
 
                     {/* Footer */}
                     <View style={styles.footer}>

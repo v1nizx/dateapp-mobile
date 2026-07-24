@@ -58,6 +58,22 @@ module.exports = {
             'O DateApp precisa da sua localização para encontrar lugares românticos próximos a você.',
         },
       ],
+      [
+        'react-native-google-mobile-ads',
+        {
+          // IDs reais do AdMob (console.admob.google.com)
+          // Para testes, use os IDs de teste do Google:
+          //   Android: ca-app-pub-3940256099942544~3347511713
+          //   iOS:     ca-app-pub-3940256099942544~1458002511
+          androidAppId: process.env.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713',
+          iosAppId: process.env.EXPO_PUBLIC_ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511',
+          // Delay de inicialização para SKAdNetwork (iOS)
+          delay_app_measurement_init: false,
+          // Conteúdo adulto: false para app familiar
+          user_tracking_usage_description: 'Este identificador será usado para exibir anúncios personalizados.',
+          sk_ad_network_items: [],
+        },
+      ],
     ],
   },
 };

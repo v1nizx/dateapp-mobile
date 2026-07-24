@@ -16,6 +16,7 @@ import {
 } from '@expo-google-fonts/be-vietnam-pro';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from './src/context/AuthContext';
+import { PlanProvider } from './src/context/PlanContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -40,11 +41,13 @@ export default function App() {
 
     return (
         <AuthProvider>
-            <SafeAreaProvider style={styles.container}>
-                <NavigationContainer>
-                    <RootNavigator />
-                </NavigationContainer>
-            </SafeAreaProvider>
+            <PlanProvider>
+                <SafeAreaProvider style={styles.container}>
+                    <NavigationContainer>
+                        <RootNavigator />
+                    </NavigationContainer>
+                </SafeAreaProvider>
+            </PlanProvider>
         </AuthProvider>
     );
 }
