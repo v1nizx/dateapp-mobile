@@ -9,6 +9,7 @@ export interface Place {
   // Filtros aplicados
   budget: '$' | '$$' | '$$$';
   type: 'gastronomia' | 'cultura' | 'ao-ar-livre' | 'aventura' | 'casual';
+  cuisineSubtype?: string | null;  // subcategoria de gastronomia (churrasco, sushi, etc.)
   period: 'dia' | 'noite';
 
   // Dados do estabelecimento
@@ -36,6 +37,7 @@ export interface Place {
 export interface PlaceFilters {
   budget: '$' | '$$' | '$$$';
   type: 'gastronomia' | 'cultura' | 'ao-ar-livre' | 'aventura' | 'casual';
+  cuisineSubtype?: string;  // subcategoria de gastronomia
   period: 'dia' | 'noite';
   latitude: number;
   longitude: number;

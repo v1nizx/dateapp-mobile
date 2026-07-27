@@ -18,6 +18,21 @@ const TYPE_LABELS: Record<string, string> = {
   casual:        'Casual e relaxado (cafeterias, sorveterias, docerias, bares tranquilos)',
 };
 
+// ─── Subcategorias de gastronomia ────────────────────────────────────────────
+// Mapeamento de subcategorias para keywords usadas no prompt da IA.
+export const GASTRONOMY_SUBTYPES: { key: string; label: string; emoji: string }[] = [
+  { key: 'churrasco',    label: 'Churrasco',    emoji: '🥩' },
+  { key: 'sushi',        label: 'Sushi / Japonês',  emoji: '🍣' },
+  { key: 'pizza',        label: 'Pizza',         emoji: '🍕' },
+  { key: 'hamburguer',   label: 'Hamburguer',    emoji: '🍔' },
+  { key: 'frutos-do-mar',label: 'Frutos do Mar', emoji: '🦐' },
+  { key: 'italiana',     label: 'Italiana',      emoji: '🍝' },
+  { key: 'nordestina',   label: 'Nordestina',    emoji: '🍲' },
+  { key: 'mexicana',     label: 'Mexicana',      emoji: '🌮' },
+  { key: 'vegetariana',  label: 'Vegetariana',   emoji: '🥗' },
+  { key: 'doceria',      label: 'Doceria / Sobremesas', emoji: '🍰' },
+];
+
 const VIBE_LABELS: Record<string, string> = {
   intimo:    'Íntimo e romântico — mesas afastadas, iluminação baixa, ambiente privativo',
   animado:   'Animado e festivo — música, movimento, ambiente descontraído',
@@ -77,9 +92,9 @@ function buildPromptWithRealPlaces(
   const period = filters.period === 'dia' ? 'durante o dia' : 'à noite';
 
   const budgetLabel: Record<string, string> = {
-    '$':   'Econômico — lugares simples, populares e acessíveis (até R$50/pessoa: lanchonetes, cafeterias, quiosques, fast food, comida de rua)',
-    '$$':  'Moderado — restaurantes casuais e bares (R$50 a R$150/pessoa: bistrôs, pizzarias, hamburguerias gourmet, pubs)',
-    '$$$': 'Premium — estabelecimentos sofisticados (acima de R$150/pessoa: fine dining, alta gastronomia, lounge bars exclusivos)',
+    '$':   'Econômico — até R$50/pessoa',
+    '$$':  'Moderado — R$50 a R$150/pessoa',
+    '$$$': 'Premium — acima de R$150/pessoa',
   };
 
   const placesList = realPlaces
@@ -88,31 +103,45 @@ function buildPromptWithRealPlaces(
     )
     .join('\n');
 
+  // Bloco de restrição de subcategoria — inserido ANTES das regras críticas
+  const subtypeBlock = filters.cuisineSubtype
+    ? `
+## 🚫 RESTRIÇÃO DE CULINÁRIA — LEIA COM ATENÇÃO:
+O usuário escolheu especificamente: **${filters.cuisineSubtype.toUpperCase()}**
+
+REGRA ABSOLUTA: Inclua SOMENTE estabelecimentos que sirvam essa culinária.
+- ✅ Permitido: restaurantes, lanchonetes ou quiosques que sirvam ${filters.cuisineSubtype}
+- ❌ PROIBIDO: qualquer lugar que NÃO seja ${filters.cuisineSubtype} (ex: se o usuário quer sushi, REJEITE Bob's, Subway, McDonald's, hamburguerias, pizzarias, etc.)
+- ❌ PROIBIDO: incluir um lugar "parecido" ou "próximo" — se não for ${filters.cuisineSubtype}, EXCLUA da lista.
+- Se houver menos de 5 lugares compatíveis na lista, retorne APENAS os compatíveis (pode retornar menos de 10).
+`
+    : '';
+
   return `Você é um especialista em experiências românticas em São Luís, MA.
 
-Abaixo está uma lista de lugares REAIS confirmados pelo Google Maps.
-Escolha os 5 melhores para um casal e escreva o conteúdo criativo de cada um.
-
-## Lugares disponíveis (REAIS — não altere nome, endereço ou coordenadas):
+Abaixo está uma lista de lugares REAIS.
+Selecione os melhores para um casal com base nos critérios abaixo e escreva o conteúdo criativo.
+${subtypeBlock}
+## Lugares disponíveis:
 ${placesList}
 
-## Critérios de seleção (OBRIGATÓRIOS):
+## Critérios de seleção:
 - Período: ${period}
 - Orçamento: ${filters.budget} — ${budgetLabel[filters.budget] ?? ''}
-  ⚠️ SELECIONE APENAS lugares compatíveis com o perfil "${filters.budget}". Rejeite qualquer lugar que claramente fuja dessa faixa.
 - Tipo de experiência: ${filters.type}
+${filters.cuisineSubtype ? `- Culinária: ${filters.cuisineSubtype} (OBRIGATÓRIO — veja restrição acima)` : ''}
 ${filters.ambiente ? `- Clima desejado: ${filters.ambiente}` : ''}
 
-## Sua tarefa:
-Para cada lugar escolhido, escreva:
+## Para cada lugar escolhido, escreva:
 - description: por que é perfeito para um casal (2-3 frases envolventes)
 - romanticActivity: sugestão de atividade especial para o casal
 - specialTip: dica exclusiva sobre o lugar
 - openingHours: horário de funcionamento se souber, ou "Consultar horários"
 
 ## REGRAS CRÍTICAS:
-1. NÃO altere name, address, latitude nem longitude — use EXATAMENTE os valores da lista acima.
-2. Os 5 lugares escolhidos DEVEM refletir o perfil de orçamento "${filters.budget}".
+1. NÃO altere name, address, latitude nem longitude — use EXATAMENTE os valores da lista.
+2. Retorne entre 5 e 8 lugares — priorizando qualidade e aderência aos critérios.
+3. ${filters.cuisineSubtype ? `REJEITE qualquer lugar que não seja ${filters.cuisineSubtype}. Sem exceções.` : `Os lugares DEVEM refletir o perfil de orçamento "${filters.budget}".`}
 
 Retorne APENAS JSON válido:
 {
@@ -139,7 +168,8 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
 
   // 1. Busca lugares reais primeiro
   const budgetLabel = { '$': 'Econômico', '$$': 'Moderado', '$$$': 'Premium' }[filters.budget] ?? filters.budget;
-  console.log(`📍 [Geoapify] Buscando lugares — tipo: ${filters.type} | budget: ${budgetLabel} | distância: ${filters.distancia ?? 'medio'}...`);
+  const subtypeLog = filters.cuisineSubtype ? ` | culinária: ${filters.cuisineSubtype}` : '';
+  console.log(`📍 [Geoapify] Buscando lugares — tipo: ${filters.type}${subtypeLog} | budget: ${budgetLabel} | distância: ${filters.distancia ?? 'medio'}...`);
   const realPlaces = await fetchRealPlaces(filters);
 
   if (realPlaces.length === 0) {
@@ -154,33 +184,65 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
   console.log('🤖 [Groq] Gerando descrições românticas...');
   const prompt = buildPromptWithRealPlaces(realPlaces, filters);
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Você cria descrições românticas para lugares reais. ' +
-            'Nunca altere nome, endereço ou coordenadas fornecidos. ' +
-            'Responda APENAS com JSON válido.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.7, // Pode ser mais alto — criatividade nas descrições é ok
-      max_tokens: 3000,
-      response_format: { type: 'json_object' },
-    }),
-  });
+  // Função interna com retry automático para 429 (rate limit)
+  async function callGroqWithRetry(retries = 2): Promise<Response> {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Você cria descrições românticas para lugares reais. ' +
+              'Nunca altere nome, endereço ou coordenadas fornecidos. ' +
+              'Retorne até 8 lugares no array places. ' +
+              'Responda APENAS com JSON válido.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 2500,   // reduzido para caber no limite TPM do plano free
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    // 429 — aguarda o tempo indicado pelo header Retry-After e tenta novamente
+    if (res.status === 429 && retries > 0) {
+      const retryAfter = res.headers.get('retry-after');
+      const waitMs = retryAfter ? parseFloat(retryAfter) * 1000 : 8000;
+      console.warn(`⏳ [Groq] Rate limit atingido — aguardando ${(waitMs / 1000).toFixed(1)}s antes de tentar novamente...`);
+      await new Promise(resolve => setTimeout(resolve, waitMs + 500)); // +500ms de margem
+      return callGroqWithRetry(retries - 1);
+    }
+
+    return res;
+  }
+
+  const response = await callGroqWithRetry();
 
   if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Groq API erro ${response.status}: ${err}`);
+    const errText = await response.text();
+    // 429 após todos os retries — mensagem amigável para o usuário
+    if (response.status === 429) {
+      let waitSec = 10;
+      try {
+        const errJson = JSON.parse(errText);
+        const msg: string = errJson?.error?.message ?? '';
+        const match = msg.match(/try again in ([\d.]+)s/);
+        if (match) waitSec = Math.ceil(parseFloat(match[1]));
+      } catch { /* usa waitSec padrão */ }
+      throw new Error(
+        `Muitas buscas em pouco tempo! ⏳\n\n` +
+        `Aguarde ${waitSec} segundos e tente novamente.\n` +
+        `(Limite do plano gratuito atingido)`
+      );
+    }
+    throw new Error(`Groq API erro ${response.status}: ${errText}`);
   }
 
   const data = await response.json();
@@ -207,6 +269,7 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
       longitude:         real.lng,
       budget:            filters.budget as any,
       type:              filters.type as any,
+      cuisineSubtype:    filters.cuisineSubtype ?? null,
       period:            filters.period as any,
       priceRange:        filters.budget as any,
       distanceKm:        real.distance ? real.distance / 1000 : null,
@@ -227,14 +290,47 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
 
 // ─── PlacesService ────────────────────────────────────────────────────────────
 
+/** Remove duplicatas de uma lista de lugares com base em coordenadas ou nome.
+ *  - Coordenadas: arredondadas a 4 casas decimais (~11 m de precisão)
+ *  - Nome: normalizado (lowercase, sem acentos, sem espaços extras)
+ *  O primeiro item encontrado sempre é mantido; duplicatas posteriores são descartadas.
+ */
+function deduplicatePlaces(places: Place[]): Place[] {
+  const seenCoords = new Set<string>();
+  const seenNames  = new Set<string>();
+
+  return places.filter(p => {
+    // Chave de localização: lat e lng arredondados a 4 dígitos
+    const lat = p.latitude  != null ? p.latitude.toFixed(4)  : 'null';
+    const lng = p.longitude != null ? p.longitude.toFixed(4) : 'null';
+    const coordKey = `${lat},${lng}`;
+
+    // Chave de nome: lowercase sem espaços múltiplos
+    const nameKey = p.name.toLowerCase().replace(/\s+/g, ' ').trim();
+
+    if (seenCoords.has(coordKey) || seenNames.has(nameKey)) {
+      console.warn(`🔁 [Dedup] Removido duplicata: "${p.name}" (${coordKey})`);
+      return false;
+    }
+
+    seenCoords.add(coordKey);
+    seenNames.add(nameKey);
+    return true;
+  });
+}
+
 export class PlacesService {
   /** Busca recomendações via Groq AI (llama-3.3-70b) */
   static async searchPlaces(filters: PlaceFilters): Promise<Place[]> {
     try {
       console.log('🔍 [PlacesService] Iniciando busca...');
       const results = await getGroqRecommendations(filters);
-      console.log(`✅ [PlacesService] ${results.length} recomendações prontas`);
-      return results;
+      const unique   = deduplicatePlaces(results);
+      if (unique.length < results.length) {
+        console.log(`🧹 [Dedup] ${results.length - unique.length} duplicata(s) removida(s)`);
+      }
+      console.log(`✅ [PlacesService] ${unique.length} recomendações únicas prontas`);
+      return unique;
     } catch (error) {
       console.error('❌ Erro ao buscar recomendações:', error);
       throw error;

@@ -42,10 +42,62 @@ const GEO_CATEGORIES_BY_BUDGET: Record<string, Record<BudgetTier, string>> = {
   },
 };
 
-function getCategoriesByBudget(type: string, budget: BudgetTier): string {
+function getCategoriesByBudget(type: string, budget: BudgetTier, hasCuisineSubtype: boolean): string {
+  // ⚠️ Quando há subcategoria de culinária (sushi, pizza, etc.), SEMPRE busca em
+  // catering.restaurant — nunca em fast_food — para não trazer redes irrelevantes.
+  if (hasCuisineSubtype && type === 'gastronomia') {
+    return 'catering.restaurant,catering.cafe';
+  }
   const byType = GEO_CATEGORIES_BY_BUDGET[type];
   if (!byType) return 'catering.restaurant';
   return byType[budget] ?? byType['$$'];
+}
+
+// ─── Lista de redes de fast food a excluir quando há subcuisine ───────────────
+// Nomes (lowercase) de cadeias genéricas que jamais correspondem a uma culinária
+// específica (sushi, churrasco, italiana, etc.).
+const GENERIC_FAST_FOOD_CHAINS = [
+  "mcdonald", "mc donald", "mcdonalds",
+  "bob's", "bobs",
+  "subway",
+  "burger king",
+  "kfc",
+  "pizza hut",  // exclui apenas se subcuisine !== pizza
+  "domino's", "dominos",
+  "giraffas",
+  "habib's", "habibs",
+  "popeyes",
+  "five guys",
+  "madero",
+  "frango assado",
+  "china in box",
+  "spoleto",   // fast-casual, não é italiana autêntica
+  "temakeria do gordo",
+];
+
+/** Remove redes de fast food genéricas quando o usuário escolheu uma culinária específica */
+function filterBySubtype(places: RealPlace[], cuisineSubtype?: string): RealPlace[] {
+  if (!cuisineSubtype) return places;
+
+  return places.filter(p => {
+    const nameLower = p.name.toLowerCase();
+
+    // Redes que são aceitáveis dependendo da subcategoria
+    if (cuisineSubtype === 'pizza') {
+      // Pizza Hut é aceitável para pizza, mas não para outros
+      const pizzaOk = ['pizza hut', 'domino', 'dominos'];
+      if (pizzaOk.some(chain => nameLower.includes(chain))) return true;
+    }
+    if (cuisineSubtype === 'hamburguer') {
+      // Redes de hamburguer são aceitáveis para subcuisine hamburguer
+      const burgerOk = ["mcdonald", "mc donald", "burger king", "bob's", "bobs", "five guys"];
+      if (burgerOk.some(chain => nameLower.includes(chain))) return true;
+    }
+
+    // Para qualquer outra subcategoria, exclui todas as redes genéricas
+    const isGeneric = GENERIC_FAST_FOOD_CHAINS.some(chain => nameLower.includes(chain));
+    return !isGeneric;
+  });
 }
 
 // ─── Tipos exportados ─────────────────────────────────────────────────────────
@@ -81,9 +133,11 @@ export async function fetchRealPlaces(filters: {
   latitude: number;
   longitude: number;
   distancia?: string;
+  cuisineSubtype?: string;
 }): Promise<RealPlace[]> {
   const budget = (filters.budget as BudgetTier) ?? '$$';
-  const categories = getCategoriesByBudget(filters.type, budget);
+  const hasCuisineSubtype = Boolean(filters.cuisineSubtype);
+  const categories = getCategoriesByBudget(filters.type, budget, hasCuisineSubtype);
 
   const radiusMap: Record<string, number> = {
     perto:  3_000,
@@ -100,15 +154,19 @@ export async function fetchRealPlaces(filters: {
     radius,
   );
 
+  // ── Filtra fast food irrelevante quando há subcategoria de culinária ─────
+  places = filterBySubtype(places, filters.cuisineSubtype);
+
   if (places.length === 0) {
     const expandedRadius = Math.min(radius * 2, 40_000);
     console.log(`⚠️ Sem resultados — expandindo raio para ${expandedRadius / 1000} km...`);
-    places = await fetchByCategories(
+    const retryPlaces = await fetchByCategories(
       categories,
       filters.latitude,
       filters.longitude,
       expandedRadius,
     );
+    places = filterBySubtype(retryPlaces, filters.cuisineSubtype);
   }
 
   if (places.length === 0) return [];
@@ -133,17 +191,20 @@ export async function fetchRealPlaces(filters: {
     return { place: p, score };
   });
 
-  // Ordena pelo score mas adiciona leve aleatoriedade nos top-15
-  // para garantir variedade entre buscas consecutivas com os mesmos filtros
-  const top15 = scored
+  // Ordena pelo score mas adiciona leve aleatoriedade nos top-30
+  // para garantir variedade entre buscas consecutivas com os mesmos filtros.
+  // O seed é baseado no timestamp (milissegundos) para que cada busca
+  // produza uma ordenação diferente mesmo com filtros idênticos.
+  const top30 = scored
     .sort((a, b) => b.score - a.score)
-    .slice(0, 15);
+    .slice(0, 30);
 
-  // Embaralha levemente: mantém os melhores no topo mas com variação
-  const shuffled = top15
-    .map(item => ({ item, rand: item.score + Math.random() * 0.15 }))
+  // Embaralha com peso: os melhores ficam no topo, mas o random range
+  // é maior (0.25) para garantir mais variação entre buscas repetidas.
+  const shuffled = top30
+    .map(item => ({ item, rand: item.score + Math.random() * 0.25 }))
     .sort((a, b) => b.rand - a.rand)
-    .slice(0, 10)
+    .slice(0, 8)   // pool de 8 entregue à IA — equilibra variedade e custo de tokens
     .map(({ item }) => item);
 
   return shuffled.map(s => {
@@ -169,7 +230,7 @@ async function fetchByCategories(
     categories,
     filter:  `circle:${lng},${lat},${radius}`,
     bias:    `proximity:${lng},${lat}`,
-    limit:   '20',
+    limit:   '30',   // busca mais para ter pool maior
     lang:    'pt',
     apiKey: process.env.EXPO_PUBLIC_GEOAPIFY_KEY ?? '',
   });

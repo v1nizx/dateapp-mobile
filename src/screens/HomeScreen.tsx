@@ -6,6 +6,7 @@ import {
     ScrollView,
     StatusBar,
     TouchableOpacity,
+    Modal,
     LayoutAnimation,
     Platform,
     UIManager,
@@ -21,7 +22,7 @@ import { BottomNavBar } from '../components/BottomNavBar';
 import { AdBanner } from '../components/AdBanner';
 import { colors, spacing, radius, fontSize, fonts, shadows, borderRadius } from '../styles/theme';
 import { useRecommendations } from '../hooks';
-import { PlacesService } from '../services/placeService';
+import { PlacesService, GASTRONOMY_SUBTYPES } from '../services/placeService';
 import { Place } from '../types/place';
 
 // Habilitar animações de layout no Android
@@ -162,6 +163,10 @@ export const HomeScreen: React.FC = () => {
     const [hasParking, setHasParking] = useState(false);
     const [isAccessible, setIsAccessible] = useState(false);
 
+    // Subcategoria de gastronomia
+    const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+    const [showCuisineModal, setShowCuisineModal] = useState(false);
+
     // Estados de localização
     const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'granted' | 'denied'>('idle');
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -224,6 +229,7 @@ export const HomeScreen: React.FC = () => {
             period: (selectedTime === 'day' ? 'dia' : 'noite') as 'dia' | 'noite',
             ambiente: selectedVibe ? VIBE_MAP[selectedVibe] : undefined,
             distancia: selectedDistance ? DISTANCE_MAP[selectedDistance] : undefined,
+            cuisineSubtype: selectedExperience === 'gastronomy' && selectedCuisine ? selectedCuisine : undefined,
             temEstacionamento: hasParking || undefined,
             acessivel: isAccessible || undefined,
             latitude: location.latitude,
@@ -234,7 +240,7 @@ export const HomeScreen: React.FC = () => {
         await searchPlaces(filters);
     };
 
-    if (places.length < 5) {
+    if (places.length < 8) {
   // opcional: mostrar aviso discreto
         console.log('Alguns lugares sugeridos não foram encontrados e foram removidos.');
     }
@@ -309,19 +315,28 @@ export const HomeScreen: React.FC = () => {
                                         emoji="🍽️"
                                         label="Gastronomia"
                                         selected={selectedExperience === 'gastronomy'}
-                                        onPress={() => setSelectedExperience('gastronomy')}
+                                        onPress={() => {
+                                            setSelectedExperience('gastronomy');
+                                            setSelectedCuisine(null);
+                                        }}
                                     />
                                     <ChipButton
                                         emoji="🎭"
                                         label="Cultura"
                                         selected={selectedExperience === 'culture'}
-                                        onPress={() => setSelectedExperience('culture')}
+                                        onPress={() => {
+                                            setSelectedExperience('culture');
+                                            setSelectedCuisine(null);
+                                        }}
                                     />
                                     <ChipButton
                                         emoji="🌿"
                                         label="Natureza"
                                         selected={selectedExperience === 'nature'}
-                                        onPress={() => setSelectedExperience('nature')}
+                                        onPress={() => {
+                                            setSelectedExperience('nature');
+                                            setSelectedCuisine(null);
+                                        }}
                                     />
                                 </View>
                                 <View style={styles.chipRowSmall}>
@@ -329,16 +344,43 @@ export const HomeScreen: React.FC = () => {
                                         emoji="⚡"
                                         label="Aventura"
                                         selected={selectedExperience === 'adventure'}
-                                        onPress={() => setSelectedExperience('adventure')}
+                                        onPress={() => {
+                                            setSelectedExperience('adventure');
+                                            setSelectedCuisine(null);
+                                        }}
                                     />
                                     <ChipButton
                                         emoji="🧸"
                                         label="Casual"
                                         selected={selectedExperience === 'casual'}
-                                        onPress={() => setSelectedExperience('casual')}
+                                        onPress={() => {
+                                            setSelectedExperience('casual');
+                                            setSelectedCuisine(null);
+                                        }}
                                     />
                                 </View>
                             </View>
+
+                            {/* Seletor de culinária — abre modal quando Gastronomia está selecionada */}
+                            {selectedExperience === 'gastronomy' && (
+                                <TouchableOpacity
+                                    style={styles.cuisinePickerButton}
+                                    onPress={() => setShowCuisineModal(true)}
+                                    activeOpacity={0.75}
+                                >
+                                    <Text style={styles.cuisinePickerEmoji}>
+                                        {selectedCuisine
+                                            ? GASTRONOMY_SUBTYPES.find(s => s.key === selectedCuisine)?.emoji ?? '🍴'
+                                            : '🍽️'}
+                                    </Text>
+                                    <Text style={styles.cuisinePickerText}>
+                                        {selectedCuisine
+                                            ? GASTRONOMY_SUBTYPES.find(s => s.key === selectedCuisine)?.label ?? 'Qualquer'
+                                            : 'Qualquer tipo de comida'}
+                                    </Text>
+                                    <Text style={styles.cuisinePickerArrow}>›</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
 
                         {/* Quando querem ir? */}
@@ -460,7 +502,7 @@ export const HomeScreen: React.FC = () => {
                             {loading ? (
                                 <View style={styles.loadingContainer}>
                                     <ActivityIndicator color={colors.primary} size="small" />
-                                    <Text style={styles.loadingText}>Buscando e validando lugares... ✨</Text>
+                                    <Text style={styles.loadingText} numberOfLines={1}>Buscando lugares... ✨</Text>
                                 </View>
                             ) : (
                                 <Text style={[
@@ -605,6 +647,88 @@ export const HomeScreen: React.FC = () => {
 
             {/* Barra de navegação inferior */}
             <BottomNavBar />
+
+            {/* ── Modal de seleção de culinária ─────────────────────────────── */}
+            <Modal
+                visible={showCuisineModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowCuisineModal(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowCuisineModal(false)}
+                >
+                    {/* Card do modal — toque interno não fecha */}
+                    <TouchableOpacity activeOpacity={1} style={styles.modalCard}>
+                        {/* Cabeçalho */}
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>🍴 Que tipo de comida?</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowCuisineModal(false)}
+                                style={styles.modalCloseBtn}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <Text style={styles.modalCloseBtnText}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Grade de opções */}
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {/* Opção "Qualquer" */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalOption,
+                                    selectedCuisine === null && styles.modalOptionSelected,
+                                ]}
+                                onPress={() => {
+                                    setSelectedCuisine(null);
+                                    setShowCuisineModal(false);
+                                }}
+                            >
+                                <Text style={styles.modalOptionEmoji}>🍽️</Text>
+                                <Text style={[
+                                    styles.modalOptionLabel,
+                                    selectedCuisine === null && styles.modalOptionLabelSelected,
+                                ]}>
+                                    Qualquer tipo
+                                </Text>
+                                {selectedCuisine === null && (
+                                    <Text style={styles.modalOptionCheck}>✓</Text>
+                                )}
+                            </TouchableOpacity>
+
+                            {GASTRONOMY_SUBTYPES.map((sub) => (
+                                <TouchableOpacity
+                                    key={sub.key}
+                                    style={[
+                                        styles.modalOption,
+                                        selectedCuisine === sub.key && styles.modalOptionSelected,
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedCuisine(
+                                            selectedCuisine === sub.key ? null : sub.key
+                                        );
+                                        setShowCuisineModal(false);
+                                    }}
+                                >
+                                    <Text style={styles.modalOptionEmoji}>{sub.emoji}</Text>
+                                    <Text style={[
+                                        styles.modalOptionLabel,
+                                        selectedCuisine === sub.key && styles.modalOptionLabelSelected,
+                                    ]}>
+                                        {sub.label}
+                                    </Text>
+                                    {selectedCuisine === sub.key && (
+                                        <Text style={styles.modalOptionCheck}>✓</Text>
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -699,6 +823,115 @@ const styles = StyleSheet.create({
     },
     chipGrid: {
         gap: spacing.sm,
+    },
+
+    // ── Botão que abre o modal de culinária ───────────────────────────────────
+    cuisinePickerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: spacing.md,
+        backgroundColor: colors.card,
+        borderRadius: radius.md,
+        borderWidth: 1.5,
+        borderColor: colors.medium,
+        paddingVertical: spacing.sm + 2,
+        paddingHorizontal: spacing.md,
+        gap: spacing.sm,
+    },
+    cuisinePickerEmoji: {
+        fontSize: 22,
+    },
+    cuisinePickerText: {
+        flex: 1,
+        fontSize: fontSize.sm,
+        fontFamily: fonts.semiBold,
+        color: colors.textDark,
+    },
+    cuisinePickerArrow: {
+        fontSize: 22,
+        color: colors.textMuted,
+    },
+
+    // ── Modal de seleção de culinária ─────────────────────────────────────────
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        justifyContent: 'flex-end',
+    },
+    modalCard: {
+        backgroundColor: colors.background,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xl + 12,
+        maxHeight: '75%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+        elevation: 16,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing.md,
+        paddingBottom: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.medium,
+    },
+    modalTitle: {
+        fontSize: fontSize.md,
+        fontFamily: fonts.bold,
+        color: colors.textDark,
+    },
+    modalCloseBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: colors.tipBackground,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalCloseBtnText: {
+        fontSize: fontSize.sm,
+        color: colors.textMuted,
+        fontFamily: fonts.semiBold,
+    },
+    modalOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.sm + 2,
+        paddingHorizontal: spacing.sm,
+        borderRadius: radius.md,
+        marginBottom: spacing.xs,
+        gap: spacing.sm,
+        borderWidth: 1.5,
+        borderColor: 'transparent',
+    },
+    modalOptionSelected: {
+        backgroundColor: `${colors.primary}18`,
+        borderColor: colors.primary,
+    },
+    modalOptionEmoji: {
+        fontSize: 24,
+        width: 36,
+        textAlign: 'center',
+    },
+    modalOptionLabel: {
+        flex: 1,
+        fontSize: fontSize.sm,
+        fontFamily: fonts.semiBold,
+        color: colors.textDark,
+    },
+    modalOptionLabelSelected: {
+        color: colors.primary,
+    },
+    modalOptionCheck: {
+        fontSize: fontSize.md,
+        color: colors.primary,
+        fontFamily: fonts.bold,
     },
     filterButton: {
         alignItems: 'center',
