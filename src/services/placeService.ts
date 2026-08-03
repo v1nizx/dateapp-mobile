@@ -198,10 +198,10 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
           {
             role: 'system',
             content:
-              'Você cria descrições românticas para lugares reais. ' +
-              'Nunca altere nome, endereço ou coordenadas fornecidos. ' +
-              'Retorne até 8 lugares no array places. ' +
-              'Responda APENAS com JSON válido.',
+              'Você é um assistente do Date App especialista em experiências românticas. ' +
+              'Responda APENAS em JSON no formato: {"places": [{"name": "...", "address": "...", "latitude": 0, "longitude": 0, "description": "...", "romanticActivity": "...", "specialTip": "...", "openingHours": "..."}]}.\n\n' +
+              'Exemplo de entrada: Lista de lugares com critérios de busca (ex: jantar romântico econômico)\n' +
+              'Exemplo de saída: {"places": [{"name": "Pizzaria Bela Napoli", "address": "Rua das Flores, 123", "latitude": -2.53, "longitude": -44.30, "description": "Lugar charmoso e intimista, perfeito para conversar.", "romanticActivity": "Dividir uma pizza à luz de velas.", "specialTip": "A pizzaria costuma encher aos finais de semana, chegue cedo.", "openingHours": "18h às 23h"}]}'
           },
           { role: 'user', content: prompt },
         ],
