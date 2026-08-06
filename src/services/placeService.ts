@@ -1,4 +1,5 @@
 import * as Location from 'expo-location';
+import OpenAI from 'openai';
 import { Place, PlaceFilters } from '../types/place';
 import { fetchRealPlaces, RealPlace } from './placesValidationService';
 
@@ -160,12 +161,30 @@ Retorne APENAS JSON válido:
 }`;
 }
 
-// ─── Chamada à API Groq ───────────────────────────────────────────────────────
+// ─── Chamada à API OpenRouter (via OpenAI SDK) ────────────────────────────────
+// Modelo: meta-llama/llama-3.3-70b-instruct:free
+// Escolhido por ser o mais capaz dos modelos gratuitos no OpenRouter:
+//   • 128k de contexto (vs 32k do Gemma 2 9B)
+//   • Qualidade de instrução superior ao Qwen 2.5 72B nas tarefas em PT-BR
 
-async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
-  const key = process.env.EXPO_PUBLIC_GROQ_API_KEY;
-  if (!key) throw new Error('EXPO_PUBLIC_GROQ_API_KEY não definida no .env');
+const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
 
+function createOpenRouterClient(): OpenAI {
+  const key = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+  if (!key) throw new Error('EXPO_PUBLIC_OPENROUTER_API_KEY não definida no .env');
+
+  return new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: key,
+    defaultHeaders: {
+      'HTTP-Referer': 'https://github.com/v1nizx/dateapp-mobile',
+      'X-Title': 'Date App Mobile',
+    },
+    dangerouslyAllowBrowser: true, // necessário para React Native / Expo
+  });
+}
+
+async function getAIRecommendations(filters: PlaceFilters): Promise<Place[]> {
   // 1. Busca lugares reais primeiro
   const budgetLabel = { '$': 'Econômico', '$$': 'Moderado', '$$$': 'Premium' }[filters.budget] ?? filters.budget;
   const subtypeLog = filters.cuisineSubtype ? ` | culinária: ${filters.cuisineSubtype}` : '';
@@ -181,19 +200,16 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
   console.log(`✅ [Geoapify] ${realPlaces.length} lugares encontrados e ranqueados`);
 
   // 2. IA só escreve o conteúdo criativo com base nos lugares reais
-  console.log('🤖 [Groq] Gerando descrições românticas...');
+  console.log(`🤖 [OpenRouter/${OPENROUTER_MODEL}] Gerando descrições românticas...`);
   const prompt = buildPromptWithRealPlaces(realPlaces, filters);
 
+  const client = createOpenRouterClient();
+
   // Função interna com retry automático para 429 (rate limit)
-  async function callGroqWithRetry(retries = 2): Promise<Response> {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+  async function callWithRetry(retries = 2): Promise<string> {
+    try {
+      const completion = await client.chat.completions.create({
+        model: OPENROUTER_MODEL,
         messages: [
           {
             role: 'system',
@@ -201,58 +217,46 @@ async function getGroqRecommendations(filters: PlaceFilters): Promise<Place[]> {
               'Você é um assistente do Date App especialista em experiências românticas. ' +
               'Responda APENAS em JSON no formato: {"places": [{"name": "...", "address": "...", "latitude": 0, "longitude": 0, "description": "...", "romanticActivity": "...", "specialTip": "...", "openingHours": "..."}]}.\n\n' +
               'Exemplo de entrada: Lista de lugares com critérios de busca (ex: jantar romântico econômico)\n' +
-              'Exemplo de saída: {"places": [{"name": "Pizzaria Bela Napoli", "address": "Rua das Flores, 123", "latitude": -2.53, "longitude": -44.30, "description": "Lugar charmoso e intimista, perfeito para conversar.", "romanticActivity": "Dividir uma pizza à luz de velas.", "specialTip": "A pizzaria costuma encher aos finais de semana, chegue cedo.", "openingHours": "18h às 23h"}]}'
+              'Exemplo de saída: {"places": [{"name": "Pizzaria Bela Napoli", "address": "Rua das Flores, 123", "latitude": -2.53, "longitude": -44.30, "description": "Lugar charmoso e intimista, perfeito para conversar.", "romanticActivity": "Dividir uma pizza à luz de velas.", "specialTip": "A pizzaria costuma encher aos finais de semana, chegue cedo.", "openingHours": "18h às 23h"}]}',
           },
           { role: 'user', content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 2500,   // reduzido para caber no limite TPM do plano free
+        max_tokens: 2500,
         response_format: { type: 'json_object' },
-      }),
-    });
+      });
 
-    // 429 — aguarda o tempo indicado pelo header Retry-After e tenta novamente
-    if (res.status === 429 && retries > 0) {
-      const retryAfter = res.headers.get('retry-after');
-      const waitMs = retryAfter ? parseFloat(retryAfter) * 1000 : 8000;
-      console.warn(`⏳ [Groq] Rate limit atingido — aguardando ${(waitMs / 1000).toFixed(1)}s antes de tentar novamente...`);
-      await new Promise(resolve => setTimeout(resolve, waitMs + 500)); // +500ms de margem
-      return callGroqWithRetry(retries - 1);
+      const content = completion.choices?.[0]?.message?.content;
+      if (!content) throw new Error('Resposta vazia do OpenRouter');
+      return content;
+    } catch (err: any) {
+      // 429 — rate limit: aguarda e tenta novamente
+      const status = err?.status ?? err?.response?.status;
+      if (status === 429 && retries > 0) {
+        const retryAfter = err?.headers?.['retry-after'];
+        const waitMs = retryAfter ? parseFloat(retryAfter) * 1000 : 8000;
+        console.warn(`⏳ [OpenRouter] Rate limit atingido — aguardando ${(waitMs / 1000).toFixed(1)}s...`);
+        await new Promise(resolve => setTimeout(resolve, waitMs + 500));
+        return callWithRetry(retries - 1);
+      }
+      // 429 após todos os retries — mensagem amigável
+      if (status === 429) {
+        throw new Error(
+          `Muitas buscas em pouco tempo! ⏳\n\n` +
+          `Aguarde alguns segundos e tente novamente.\n` +
+          `(Limite do plano gratuito atingido)`
+        );
+      }
+      throw new Error(`OpenRouter API erro ${status ?? 'desconhecido'}: ${err?.message ?? err}`);
     }
-
-    return res;
   }
 
-  const response = await callGroqWithRetry();
-
-  if (!response.ok) {
-    const errText = await response.text();
-    // 429 após todos os retries — mensagem amigável para o usuário
-    if (response.status === 429) {
-      let waitSec = 10;
-      try {
-        const errJson = JSON.parse(errText);
-        const msg: string = errJson?.error?.message ?? '';
-        const match = msg.match(/try again in ([\d.]+)s/);
-        if (match) waitSec = Math.ceil(parseFloat(match[1]));
-      } catch { /* usa waitSec padrão */ }
-      throw new Error(
-        `Muitas buscas em pouco tempo! ⏳\n\n` +
-        `Aguarde ${waitSec} segundos e tente novamente.\n` +
-        `(Limite do plano gratuito atingido)`
-      );
-    }
-    throw new Error(`Groq API erro ${response.status}: ${errText}`);
-  }
-
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Resposta vazia da Groq');
+  const content = await callWithRetry();
 
   const parsed = JSON.parse(content);
   const aiPlaces: any[] = parsed.places ?? [];
 
-  // 3. Mescla: dados reais (Geoapify) + conteúdo criativo (Groq)
+  // 3. Mescla: dados reais (Geoapify) + conteúdo criativo (OpenRouter)
   //    Geoapify sempre tem prioridade sobre o que a IA retornou
   return aiPlaces.map((aiPlace, idx) => {
     // Tenta casar pelo nome; fallback para o índice correspondente
@@ -320,11 +324,11 @@ function deduplicatePlaces(places: Place[]): Place[] {
 }
 
 export class PlacesService {
-  /** Busca recomendações via Groq AI (llama-3.3-70b) */
+  /** Busca recomendações via OpenRouter (meta-llama/llama-3.3-70b-instruct:free) */
   static async searchPlaces(filters: PlaceFilters): Promise<Place[]> {
     try {
       console.log('🔍 [PlacesService] Iniciando busca...');
-      const results = await getGroqRecommendations(filters);
+      const results = await getAIRecommendations(filters);
       const unique   = deduplicatePlaces(results);
       if (unique.length < results.length) {
         console.log(`🧹 [Dedup] ${results.length - unique.length} duplicata(s) removida(s)`);
