@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -14,8 +15,15 @@ const firebaseConfig = {
 // Garante que o Firebase só seja inicializado uma vez
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Auth simples — sem initializeAuth/AsyncStorage que causavam o erro
-// "Component auth has not been registered yet"
-const auth = getAuth(app);
+// Inicializa a autenticação com persistência local
+let auth;
+try {
+    auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+    });
+} catch (error: any) {
+    // Caso já tenha sido inicializado (ex: hot reload), apenas recupera a instância
+    auth = getAuth(app);
+}
 
 export { app, auth };

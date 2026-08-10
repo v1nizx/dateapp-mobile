@@ -167,7 +167,7 @@ Retorne APENAS JSON válido:
 //   • 128k de contexto (vs 32k do Gemma 2 9B)
 //   • Qualidade de instrução superior ao Qwen 2.5 72B nas tarefas em PT-BR
 
-const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct';
 
 function createOpenRouterClient(): OpenAI {
   const key = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
