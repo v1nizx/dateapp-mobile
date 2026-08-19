@@ -75,18 +75,18 @@ export function RegisterScreen() {
         try {
             console.log('[Register] Iniciando criação de conta para:', email.trim());
             console.log('[Register] auth object:', auth);
-            
+
             const userCredential = await createUserWithEmailAndPassword(
                 auth,
                 email.trim(),
                 password
             );
-            
+
             console.log('[Register] Usuário criado:', userCredential.user.uid);
-            
+
             // Salva o nome de exibição no perfil do Firebase
             await updateProfile(userCredential.user, { displayName: name.trim() });
-            
+
             console.log('[Register] Perfil atualizado com nome:', name.trim());
 
             Alert.alert(
@@ -98,7 +98,7 @@ export function RegisterScreen() {
             console.error('[Register] Erro completo:', JSON.stringify(error, null, 2));
             console.error('[Register] Código do erro:', error.code);
             console.error('[Register] Mensagem:', error.message);
-            
+
             if (error.code === 'auth/email-already-in-use') {
                 Alert.alert('E-mail já cadastrado', 'Este e-mail já está em uso. Faça login em vez disso.');
             } else if (error.code === 'auth/invalid-email') {

@@ -251,9 +251,14 @@ async function getAIRecommendations(filters: PlaceFilters): Promise<Place[]> {
     }
   }
 
-  const content = await callWithRetry();
+  const rawContent = await callWithRetry();
 
-  const parsed = JSON.parse(content);
+  // OpenRouter pode retornar whitespace/\r\n antes do JSON — extrai o bloco { } com regex
+  const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error(`Resposta inválida do OpenRouter (sem JSON): ${rawContent.substring(0, 100)}`);
+  }
+  const parsed = JSON.parse(jsonMatch[0]);
   const aiPlaces: any[] = parsed.places ?? [];
 
   // 3. Mescla: dados reais (Geoapify) + conteúdo criativo (OpenRouter)
