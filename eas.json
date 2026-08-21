@@ -8,8 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "development",
-        "EXPO_PUBLIC_OPENROUTER_API_KEY": "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"
+        "APP_VARIANT": "development"
       }
     },
     "preview": {
@@ -20,16 +19,17 @@
       },
       "env": {
         "APP_VARIANT": "preview",
-        "EAS_BUILD": "true",
-        "EXPO_PUBLIC_OPENROUTER_API_KEY": "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"
+        "EAS_BUILD": "true"
       }
     },
     "production": {
       "channel": "production",
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
         "APP_VARIANT": "production",
-        "EAS_BUILD": "true",
-        "EXPO_PUBLIC_OPENROUTER_API_KEY": "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"
+        "EAS_BUILD": "true"
       }
     }
   },

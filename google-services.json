@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "453562375256-c0qc212u212utkmf254n8eso1i1827j7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dateapp.mobile",
+            "certificate_hash": "071b5220e199ab8b4302bc55dc9995a5be8555b3"
+          }
+        },
+        {
           "client_id": "453562375256-uej33nmnqfse8l1035cd04vkg5ne9bf3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

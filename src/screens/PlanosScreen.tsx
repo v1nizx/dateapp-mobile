@@ -8,7 +8,8 @@ import {
     Image,
     ScrollView,
     ImageBackground,
-    Platform
+    Platform,
+    Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, spacing, radius, shadows } from '../styles/theme';
@@ -22,6 +23,19 @@ type PlanosScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 
 
 export function PlanosScreen() {
     const navigation = useNavigation<PlanosScreenNavigationProp>();
+
+    // ── Handlers ──────────────────────────────────────────────────────────────
+    const handleSubscribe = () => {
+        Alert.alert(
+            '✨ Em breve!',
+            'O Plano Premium estará disponível muito em breve!\n\nContinue aproveitando as 3 buscas gratuitas por dia até lá. 💕',
+            [{ text: 'Entendi, obrigado!', style: 'default' }]
+        );
+    };
+
+    const handleContinueFree = () => {
+        navigation.goBack();
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -71,7 +85,7 @@ export function PlanosScreen() {
                                 ))}
                             </View>
 
-                            <TouchableOpacity style={styles.premiumButton} activeOpacity={0.8}>
+                            <TouchableOpacity style={styles.premiumButton} activeOpacity={0.8} onPress={handleSubscribe}>
                                 <Text style={styles.premiumButtonText}>Assinar Agora ✨</Text>
                             </TouchableOpacity>
                         </View>
@@ -105,7 +119,7 @@ export function PlanosScreen() {
                             </View>
                         </View>
 
-                        <TouchableOpacity style={styles.freeButton}>
+                        <TouchableOpacity style={styles.freeButton} onPress={handleContinueFree}>
                             <Text style={styles.freeButtonText}>Continuar com Grátis</Text>
                         </TouchableOpacity>
                     </View>

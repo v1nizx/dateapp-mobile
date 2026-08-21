@@ -8,10 +8,10 @@ module.exports = {
     scheme: 'dateapp',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/icon.png',
+    icon: './assets/icon-512x512.png',
     userInterfaceStyle: 'light',
     splash: {
-      image: './assets/splash-icon.png',
+      image: './assets/icon-512x512.png',
       resizeMode: 'contain',
       backgroundColor: '#FFE4EE',
     },
@@ -28,14 +28,14 @@ module.exports = {
         'ACCESS_FINE_LOCATION',
       ],
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: './assets/icon-512x512.png',
         backgroundColor: '#FFE4EE',
       },
       // Necessário para Google Sign-In nativo no Android
       googleServicesFile: './google-services.json',
     },
     web: {
-      favicon: './assets/favicon.png',
+      favicon: './assets/icon-512x512.png',
     },
     runtimeVersion: {
       policy: 'appVersion',

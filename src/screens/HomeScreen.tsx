@@ -21,9 +21,13 @@ import { ChipButton, PrimaryButton, SectionCard, FeatureItem, FacilityChip } fro
 import { BottomNavBar } from '../components/BottomNavBar';
 import { AdBanner } from '../components/AdBanner';
 import { colors, spacing, radius, fontSize, fonts, shadows, borderRadius } from '../styles/theme';
-import { useRecommendations } from '../hooks';
+import { useRecommendations, useSearchLimit } from '../hooks';
+import { usePlan } from '../context/PlanContext';
 import { PlacesService, GASTRONOMY_SUBTYPES } from '../services/placeService';
 import { Place } from '../types/place';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 // Habilitar animações de layout no Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -171,8 +175,11 @@ export const HomeScreen: React.FC = () => {
     const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'granted' | 'denied'>('idle');
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-    // Hook de recomendações
+    // Hooks
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const { isPremium } = usePlan();
     const { places, loading, error, searchPlaces, clearPlaces } = useRecommendations();
+    const { remaining, isLimitReached, registerSearch } = useSearchLimit();
 
     const toggleAdvancedFilters = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -209,17 +216,29 @@ export const HomeScreen: React.FC = () => {
             return;
         }
 
-        // Obter localização se ainda não tiver
+        // ── Verificar limite de buscas para usuários gratuitos ────────────────
+        if (!isPremium && isLimitReached) {
+            Alert.alert(
+                'Limite diário atingido 😊',
+                'Você usou todas as 3 buscas gratuitas de hoje!\n\nVolte amanhã ou assine o Plano Premium para buscas ilimitadas.',
+                [
+                    { text: 'Voltar amanhã', style: 'cancel' },
+                    {
+                        text: '✨ Ver Plano Premium',
+                        onPress: () => navigation.navigate('Planos'),
+                    },
+                ]
+            );
+            return;
+        }
+
+        // Obter localização se ainda não tiver (mas sem pedir permissão automaticamente agora)
         let location = userLocation;
         if (!location) {
-            try {
-                location = await PlacesService.getCurrentLocation();
-                setUserLocation(location);
-                setLocationStatus('granted');
-            } catch {
-                location = PlacesService.getDefaultLocation();
-                setUserLocation(location);
-            }
+            // Usa localização padrão silenciosamente se o usuário ainda não permitiu.
+            // Para pedir permissão, o usuário deve clicar explicitamente no botão de localização.
+            location = PlacesService.getDefaultLocation();
+            setUserLocation(location);
         }
 
         // Montar filtros
@@ -236,8 +255,9 @@ export const HomeScreen: React.FC = () => {
             longitude: location.longitude,
         };
 
-        // Buscar recomendações
+        // Buscar recomendações e registrar uso
         await searchPlaces(filters);
+        await registerSearch();
     };
 
     if (places.length < 8) {
@@ -246,6 +266,7 @@ export const HomeScreen: React.FC = () => {
     }
 
     const canSearch = selectedBudget && selectedExperience && selectedTime;
+
 
     return (
         <SafeAreaView style={styles.container}>
@@ -493,8 +514,9 @@ export const HomeScreen: React.FC = () => {
                         <TouchableOpacity
                             style={[
                                 styles.surpriseButton,
-                                canSearch && styles.surpriseButtonActive,
+                                canSearch && !isLimitReached && styles.surpriseButtonActive,
                                 loading && styles.surpriseButtonLoading,
+                                !isPremium && isLimitReached && styles.surpriseButtonBlocked,
                             ]}
                             onPress={handleSurprise}
                             disabled={loading}
@@ -503,6 +525,10 @@ export const HomeScreen: React.FC = () => {
                                 <View style={styles.loadingContainer}>
                                     <ActivityIndicator color={colors.primary} size="small" />
                                     <Text style={styles.loadingText} numberOfLines={1}>Buscando lugares... ✨</Text>
+                                </View>
+                            ) : !isPremium && isLimitReached ? (
+                                <View style={styles.loadingContainer}>
+                                    <Text style={styles.surpriseButtonTextBlocked}>🔒 Limite diário atingido</Text>
                                 </View>
                             ) : (
                                 <Text style={[
@@ -514,12 +540,36 @@ export const HomeScreen: React.FC = () => {
                             )}
                         </TouchableOpacity>
 
-                        <Text style={styles.helperText}>
-                            {canSearch
-                                ? 'Tudo pronto! Clique em Me Surpreenda! 🎉'
-                                : 'Selecione orçamento, tipo e período para continuar'}
-                        </Text>
+                        {/* Contador de buscas / helper text */}
+                        {!isPremium && !isLimitReached && remaining !== null ? (
+                            <View style={styles.searchCounterRow}>
+                                <Text style={styles.searchCounterText}>
+                                    {remaining === 3
+                                        ? '3 buscas gratuitas disponíveis hoje'
+                                        : remaining === 1
+                                        ? '⚠️ Última busca gratuita de hoje!'
+                                        : `${remaining} buscas gratuitas restantes hoje`}
+                                </Text>
+                            </View>
+                        ) : !isPremium && isLimitReached ? (
+                            <TouchableOpacity
+                                style={styles.upgradeBanner}
+                                onPress={() => navigation.navigate('Planos')}
+                                activeOpacity={0.85}
+                            >
+                                <Text style={styles.upgradeBannerText}>
+                                    ✨ Assine o Premium para buscas ilimitadas
+                                </Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <Text style={styles.helperText}>
+                                {canSearch
+                                    ? 'Tudo pronto! Clique em Me Surpreenda! 🎉'
+                                    : 'Selecione orçamento, tipo e período para continuar'}
+                            </Text>
+                        )}
                     </SectionCard>
+
 
                     {/* Erro */}
                     {error && (
@@ -585,12 +635,12 @@ export const HomeScreen: React.FC = () => {
                             <Text style={styles.locationTitle}>
                                 {locationStatus === 'granted'
                                     ? 'Localização permitida!'
-                                    : 'Permita o acesso à localização'}
+                                    : 'Encontros perto de você'}
                             </Text>
                             <Text style={styles.locationSubtitle}>
                                 {locationStatus === 'granted'
-                                    ? 'Vamos encontrar lugares próximos a você'
-                                    : 'Para encontrar lugares incríveis próximos a você'}
+                                    ? 'Vamos encontrar lugares incríveis próximos a você!'
+                                    : 'Para sugerir os melhores lugares, precisamos saber onde vocês estão. Sua localização será usada apenas durante a busca e nunca será compartilhada.'}
                             </Text>
                             {locationStatus !== 'granted' && (
                                 <View style={styles.locationButtonContainer}>
@@ -1003,7 +1053,47 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
     },
 
+    // ── Limite de buscas ──────────────────────────────────────────────────────
+    surpriseButtonBlocked: {
+        backgroundColor: '#F5F5F5',
+        borderColor: '#DDDDDD',
+        opacity: 0.85,
+    },
+    surpriseButtonTextBlocked: {
+        color: '#999999',
+        fontSize: fontSize.md,
+        fontFamily: fonts.semiBold,
+    },
+    searchCounterRow: {
+        alignItems: 'center',
+        marginTop: spacing.sm,
+        paddingVertical: spacing.xs,
+    },
+    searchCounterText: {
+        color: colors.textMuted,
+        fontSize: fontSize.xs,
+        fontFamily: fonts.semiBold,
+        textAlign: 'center',
+    },
+    upgradeBanner: {
+        marginTop: spacing.sm,
+        backgroundColor: `${colors.primary}15`,
+        borderRadius: radius.full,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: `${colors.primary}40`,
+    },
+    upgradeBannerText: {
+        color: colors.primary,
+        fontSize: fontSize.xs,
+        fontFamily: fonts.semiBold,
+        textAlign: 'center',
+    },
+
     // ── Cards de lugares ──────────────────────────────────────────────────────
+
     placeCard: {
         backgroundColor: colors.card,
         borderRadius: radius.lg,

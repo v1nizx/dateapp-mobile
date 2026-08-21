@@ -1,6 +1,13 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { WelcomeScreen, LoginScreen, PlanosScreen, RegisterScreen, HomeScreen, PerfilScreen } from '../screens';
+import {
+    WelcomeScreen,
+    LoginScreen,
+    PlanosScreen,
+    RegisterScreen,
+    HomeScreen,
+    PerfilScreen,
+} from '../screens';
 
 export type RootStackParamList = {
     Welcome: undefined;
@@ -15,11 +22,11 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
     return (
-        <Stack.Navigator 
-            initialRouteName="Welcome" 
-            screenOptions={{ 
+        <Stack.Navigator
+            initialRouteName="Welcome"
+            screenOptions={{
                 headerShown: false,
-                animation: 'slide_from_right'
+                animation: 'slide_from_right',
             }}
         >
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
