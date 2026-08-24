@@ -165,7 +165,7 @@ Retorne APENAS JSON válido:
 // Groq: 100% gratuito, sem limite de crédito, só rate limit por minuto
 // OpenRouter: fallback caso o Groq falhe (ex: rate limit excessivo)
 
-const GROQ_MODEL        = 'llama-3.3-70b-versatile';
+const GROQ_MODEL        = 'openai/gpt-oss-20b';
 const OPENROUTER_MODEL  = 'meta-llama/llama-3.3-70b-instruct';
 
 function createGroqClient(): OpenAI {
