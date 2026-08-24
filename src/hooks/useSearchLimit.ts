@@ -2,20 +2,19 @@
  * useSearchLimit — Controla o limite de buscas diárias para o plano gratuito.
  *
  * Regras:
- *  - Plano Free: máximo de 3 buscas por dia.
+ *  - Plano Free: máximo de 5 buscas por dia (por usuário/conta).
  *  - Plano Premium: sem limite.
- *  - O contador é salvo no AsyncStorage e resetado automaticamente quando
- *    a data muda (à meia-noite local).
- *
- * Chave do AsyncStorage: "search_limit" → { count: number; date: string }
+ *  - O contador é salvo no AsyncStorage por usuário (search_limit_{userId})
+ *    e resetado automaticamente quando a data muda (à meia-noite local).
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePlan } from '../context/PlanContext';
+import { useAuth } from '../context/AuthContext';
 
-const STORAGE_KEY = 'search_limit';
-const MAX_FREE_SEARCHES = 3;
+const BASE_STORAGE_KEY = 'search_limit';
+const MAX_FREE_SEARCHES = 5;
 
 interface SearchLimitData {
     count: number;
@@ -45,15 +44,19 @@ function getTodayString(): string {
 
 export function useSearchLimit(): UseSearchLimitReturn {
     const { isPremium } = usePlan();
+    const { user } = useAuth();
     const [usedToday, setUsedToday] = useState(0);
 
-    // ── Carrega o contador do AsyncStorage ao montar ──────────────────────────
+    const userId = user?.uid || 'guest';
+    const storageKey = `${BASE_STORAGE_KEY}_${userId}`;
+
+    // ── Carrega o contador do AsyncStorage ao montar ou trocar de usuário ──────────
     useEffect(() => {
         if (isPremium) return; // premium não precisa controlar
 
         async function loadCounter() {
             try {
-                const raw = await AsyncStorage.getItem(STORAGE_KEY);
+                const raw = await AsyncStorage.getItem(storageKey);
                 if (!raw) {
                     setUsedToday(0);
                     return;
@@ -63,7 +66,7 @@ export function useSearchLimit(): UseSearchLimitReturn {
 
                 // Se a data salva é de outro dia, reseta o contador
                 if (data.date !== today) {
-                    await AsyncStorage.removeItem(STORAGE_KEY);
+                    await AsyncStorage.removeItem(storageKey);
                     setUsedToday(0);
                 } else {
                     setUsedToday(data.count);
@@ -75,7 +78,7 @@ export function useSearchLimit(): UseSearchLimitReturn {
         }
 
         loadCounter();
-    }, [isPremium]);
+    }, [isPremium, storageKey]);
 
     // ── Registra uma nova busca ───────────────────────────────────────────────
     const registerSearch = useCallback(async () => {
@@ -86,18 +89,18 @@ export function useSearchLimit(): UseSearchLimitReturn {
 
         const data: SearchLimitData = { count: newCount, date: today };
         try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            await AsyncStorage.setItem(storageKey, JSON.stringify(data));
         } catch {
             // Silencioso — não bloqueia o uso em caso de erro de storage
         }
         setUsedToday(newCount);
-    }, [isPremium, usedToday]);
+    }, [isPremium, usedToday, storageKey]);
 
     // ── Reseta o contador ─────────────────────────────────────────────────────
     const resetCounter = useCallback(async () => {
-        await AsyncStorage.removeItem(STORAGE_KEY);
+        await AsyncStorage.removeItem(storageKey);
         setUsedToday(0);
-    }, []);
+    }, [storageKey]);
 
     // ── Valores derivados ─────────────────────────────────────────────────────
     if (isPremium) {

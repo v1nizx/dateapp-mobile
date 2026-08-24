@@ -220,7 +220,7 @@ export const HomeScreen: React.FC = () => {
         if (!isPremium && isLimitReached) {
             Alert.alert(
                 'Limite diário atingido 😊',
-                'Você usou todas as 3 buscas gratuitas de hoje!\n\nVolte amanhã ou assine o Plano Premium para buscas ilimitadas.',
+                'Você usou todas as 5 buscas gratuitas de hoje!\n\nVolte amanhã ou assine o Plano Premium para buscas ilimitadas.',
                 [
                     { text: 'Voltar amanhã', style: 'cancel' },
                     {
@@ -544,8 +544,8 @@ export const HomeScreen: React.FC = () => {
                         {!isPremium && !isLimitReached && remaining !== null ? (
                             <View style={styles.searchCounterRow}>
                                 <Text style={styles.searchCounterText}>
-                                    {remaining === 3
-                                        ? '3 buscas gratuitas disponíveis hoje'
+                                    {remaining === 5
+                                        ? '5 buscas gratuitas disponíveis hoje'
                                         : remaining === 1
                                         ? '⚠️ Última busca gratuita de hoje!'
                                         : `${remaining} buscas gratuitas restantes hoje`}

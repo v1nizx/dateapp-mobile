@@ -28,7 +28,7 @@ export function PlanosScreen() {
     const handleSubscribe = () => {
         Alert.alert(
             '✨ Em breve!',
-            'O Plano Premium estará disponível muito em breve!\n\nContinue aproveitando as 3 buscas gratuitas por dia até lá. 💕',
+            'O Plano Premium estará disponível muito em breve!\n\nContinue aproveitando as 5 buscas gratuitas por dia até lá. 💕',
             [{ text: 'Entendi, obrigado!', style: 'default' }]
         );
     };
@@ -107,7 +107,7 @@ export function PlanosScreen() {
                             </View>
                             <View style={styles.featureItem}>
                                 <Text style={styles.checkIconFree}>✓</Text>
-                                <Text style={styles.featureTextFree}>3 buscas por dia.</Text>
+                                <Text style={styles.featureTextFree}>5 buscas por dia.</Text>
                             </View>
                             <View style={[styles.featureItem, styles.disabledFeature]}>
                                 <Text style={styles.crossIcon}>✕</Text>
