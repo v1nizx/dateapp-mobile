@@ -161,13 +161,22 @@ Retorne APENAS JSON válido:
 }`;
 }
 
-// ─── Chamada à API OpenRouter (via OpenAI SDK) ────────────────────────────────
-// Modelo: meta-llama/llama-3.3-70b-instruct:free
-// Escolhido por ser o mais capaz dos modelos gratuitos no OpenRouter:
-//   • 128k de contexto (vs 32k do Gemma 2 9B)
-//   • Qualidade de instrução superior ao Qwen 2.5 72B nas tarefas em PT-BR
+// ─── Chamada à API AI (Groq primary · OpenRouter fallback) ───────────────────
+// Groq: 100% gratuito, sem limite de crédito, só rate limit por minuto
+// OpenRouter: fallback caso o Groq falhe (ex: rate limit excessivo)
 
-const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct';
+const GROQ_MODEL        = 'llama-3.3-70b-versatile';
+const OPENROUTER_MODEL  = 'meta-llama/llama-3.3-70b-instruct';
+
+function createGroqClient(): OpenAI {
+  const key = process.env.EXPO_PUBLIC_GROQ_API_KEY;
+  if (!key) throw new Error('EXPO_PUBLIC_GROQ_API_KEY não definida no .env');
+  return new OpenAI({
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: key,
+    dangerouslyAllowBrowser: true,
+  });
+}
 
 function createOpenRouterClient(): OpenAI {
   const key = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
@@ -200,25 +209,21 @@ async function getAIRecommendations(filters: PlaceFilters): Promise<Place[]> {
   console.log(`✅ [Geoapify] ${realPlaces.length} lugares encontrados e ranqueados`);
 
   // 2. IA só escreve o conteúdo criativo com base nos lugares reais
-  console.log(`🤖 [OpenRouter/${OPENROUTER_MODEL}] Gerando descrições românticas...`);
   const prompt = buildPromptWithRealPlaces(realPlaces, filters);
+  const systemMessage =
+    'Você é um assistente do Date App especialista em experiências românticas. ' +
+    'Responda APENAS em JSON no formato: {"places": [{"name": "...", "address": "...", "latitude": 0, "longitude": 0, "description": "...", "romanticActivity": "...", "specialTip": "...", "openingHours": "..."}]}.\n\n' +
+    'Exemplo de entrada: Lista de lugares com critérios de busca (ex: jantar romântico econômico)\n' +
+    'Exemplo de saída: {"places": [{"name": "Pizzaria Bela Napoli", "address": "Rua das Flores, 123", "latitude": -2.53, "longitude": -44.30, "description": "Lugar charmoso e intimista, perfeito para conversar.", "romanticActivity": "Dividir uma pizza à luz de velas.", "specialTip": "A pizzaria costuma encher aos finais de semana, chegue cedo.", "openingHours": "18h às 23h"}]}';
 
-  const client = createOpenRouterClient();
-
-  // Função interna com retry automático para 429 (rate limit)
-  async function callWithRetry(retries = 2): Promise<string> {
+  /** Tenta chamar um cliente com retry automático para 429 */
+  async function callClient(client: OpenAI, model: string, retries = 2): Promise<string> {
     try {
+      console.log(`🤖 [AI/${model}] Gerando descrições românticas...`);
       const completion = await client.chat.completions.create({
-        model: OPENROUTER_MODEL,
+        model,
         messages: [
-          {
-            role: 'system',
-            content:
-              'Você é um assistente do Date App especialista em experiências românticas. ' +
-              'Responda APENAS em JSON no formato: {"places": [{"name": "...", "address": "...", "latitude": 0, "longitude": 0, "description": "...", "romanticActivity": "...", "specialTip": "...", "openingHours": "..."}]}.\n\n' +
-              'Exemplo de entrada: Lista de lugares com critérios de busca (ex: jantar romântico econômico)\n' +
-              'Exemplo de saída: {"places": [{"name": "Pizzaria Bela Napoli", "address": "Rua das Flores, 123", "latitude": -2.53, "longitude": -44.30, "description": "Lugar charmoso e intimista, perfeito para conversar.", "romanticActivity": "Dividir uma pizza à luz de velas.", "specialTip": "A pizzaria costuma encher aos finais de semana, chegue cedo.", "openingHours": "18h às 23h"}]}',
-          },
+          { role: 'system', content: systemMessage },
           { role: 'user', content: prompt },
         ],
         temperature: 0.7,
@@ -227,36 +232,48 @@ async function getAIRecommendations(filters: PlaceFilters): Promise<Place[]> {
       });
 
       const content = completion.choices?.[0]?.message?.content;
-      if (!content) throw new Error('Resposta vazia do OpenRouter');
+      if (!content) throw new Error('Resposta vazia do provider de IA');
       return content;
     } catch (err: any) {
-      // 429 — rate limit: aguarda e tenta novamente
       const status = err?.status ?? err?.response?.status;
+      // Rate limit — aguarda e tenta de novo
       if (status === 429 && retries > 0) {
         const retryAfter = err?.headers?.['retry-after'];
         const waitMs = retryAfter ? parseFloat(retryAfter) * 1000 : 8000;
-        console.warn(`⏳ [OpenRouter] Rate limit atingido — aguardando ${(waitMs / 1000).toFixed(1)}s...`);
+        console.warn(`⏳ [AI/${model}] Rate limit — aguardando ${(waitMs / 1000).toFixed(1)}s...`);
         await new Promise(resolve => setTimeout(resolve, waitMs + 500));
-        return callWithRetry(retries - 1);
+        return callClient(client, model, retries - 1);
       }
-      // 429 após todos os retries — mensagem amigável
-      if (status === 429) {
+      throw err;
+    }
+  }
+
+  // Tenta Groq primeiro (gratuito); se falhar, tenta OpenRouter como fallback
+  let rawContent: string;
+  try {
+    rawContent = await callClient(createGroqClient(), GROQ_MODEL);
+  } catch (groqErr: any) {
+    const groqStatus = groqErr?.status ?? groqErr?.response?.status;
+    console.warn(`⚠️ [Groq] Falhou (status ${groqStatus ?? 'desconhecido'}) — tentando OpenRouter...`);
+    try {
+      rawContent = await callClient(createOpenRouterClient(), OPENROUTER_MODEL);
+    } catch (orErr: any) {
+      const orStatus = orErr?.status ?? orErr?.response?.status;
+      if (orStatus === 429) {
         throw new Error(
           `Muitas buscas em pouco tempo! ⏳\n\n` +
           `Aguarde alguns segundos e tente novamente.\n` +
           `(Limite do plano gratuito atingido)`
         );
       }
-      throw new Error(`OpenRouter API erro ${status ?? 'desconhecido'}: ${err?.message ?? err}`);
+      throw new Error(`Erro ao gerar recomendações (status ${orStatus ?? 'desconhecido'})`);
     }
   }
 
-  const rawContent = await callWithRetry();
-
-  // OpenRouter pode retornar whitespace/\r\n antes do JSON — extrai o bloco { } com regex
+  // Extrai o bloco JSON da resposta (pode vir com whitespace/\r\n antes)
   const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error(`Resposta inválida do OpenRouter (sem JSON): ${rawContent.substring(0, 100)}`);
+    throw new Error('Resposta inválida do provider de IA (sem JSON)');
   }
   const parsed = JSON.parse(jsonMatch[0]);
   const aiPlaces: any[] = parsed.places ?? [];

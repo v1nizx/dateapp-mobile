@@ -577,17 +577,9 @@ export const HomeScreen: React.FC = () => {
                             <View style={styles.errorContainer}>
                                 <Text style={styles.errorEmoji}>😔</Text>
                                 <Text style={styles.errorTitle}>Ops! Algo deu errado</Text>
-                                {error.split('\n').map((line, i) => (
-                                    <Text
-                                        key={i}
-                                        style={[
-                                            styles.errorText,
-                                            line.startsWith('•') && styles.errorBullet,
-                                        ]}
-                                    >
-                                        {line}
-                                    </Text>
-                                ))}
+                                <Text style={styles.errorText}>
+                                    Ocorreu um erro inesperado. Por favor, entre em contato com o suporte.
+                                </Text>
                                 <View style={styles.errorButtons}>
                                     <TouchableOpacity
                                         style={styles.retryButton}
